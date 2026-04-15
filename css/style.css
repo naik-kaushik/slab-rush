@@ -1,0 +1,256 @@
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: #1a2a3a;
+      overflow: hidden;
+    }
+
+    #gw {
+      width: 100%;
+      height: 100vh;
+      min-height: 500px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(160deg,
+          #1b3a5c 0%,
+          #2a5f7a 40%,
+          #1e4060 100%);
+      font-family: "Outfit", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #score {
+      position: absolute;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(40px, 8vw, 72px);
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.92);
+      text-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+      z-index: 10;
+      pointer-events: none;
+      letter-spacing: -2px;
+    }
+
+    #hint {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.35);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      pointer-events: none;
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    .mobile-hint {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-hint {
+        display: inline;
+      }
+
+      .desktop-hint {
+        display: none;
+      }
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 24px;
+    }
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 20;
+    }
+
+    #card {
+      padding: 44px 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+      min-width: 260px;
+    }
+
+    #card h2 {
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    #card .big {
+      font-size: clamp(56px, 14vw, 80px);
+      font-weight: 600;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: -3px;
+    }
+
+    #card .sub {
+      font-size: 12px;
+      font-weight: 300;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    #card .tagline {
+      font-size: 15px;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 6px;
+    }
+
+    #logo {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 24px;
+      margin-bottom: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #play-btn {
+      margin-top: 8px;
+      padding: 14px 48px;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      cursor: pointer;
+      font-family: "Outfit", sans-serif;
+      transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    }
+
+    #play-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    #play-btn:active {
+      transform: scale(0.97);
+    }
+
+    #perfect {
+      position: absolute;
+      top: 42%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.9);
+      pointer-events: none;
+      z-index: 15;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    /* Sound Icon Button */
+    #sound-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: #fff;
+      cursor: pointer;
+      z-index: 30;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    #sound-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    #sound-btn:active {
+      transform: scale(0.95);
+    }
+
+    #sound-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+    }
+
+    /* Coin Counter Styles */
+    #coin-counter {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      height: 44px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: #fff;
+      z-index: 30;
+      font-family: "Outfit", sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    #coin-counter svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .coin-icon {
+      filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4));
+    }
