@@ -22,14 +22,17 @@
         perfectTimeout,
         soundEnabled = true,
         totalCoins = parseInt(localStorage.getItem('slab_rush_coins') || '0'),
+        totalGems = parseInt(localStorage.getItem('slab_rush_gems') || '0'),
         sessionCoins = 0,
+        sessionGems = 0,
         lastSpeedScale = 0,
         multiplierTime = 0,
         consecutivePerfects = 0,
         lastLoopTime = 0;
 
-    function updateCoinDisplay() {
+    function updateRewardDisplay() {
         document.getElementById("coin-val").textContent = Math.floor(totalCoins);
+        document.getElementById("gem-val").textContent = Math.floor(totalGems);
     }
 
     const chime = new Audio("assets/audio/chime_sound.mp3");
@@ -120,12 +123,13 @@
         overlay.style.display = "none";
         score = 0;
         sessionCoins = 0;
+        sessionGems = 0;
         lastSpeedScale = 0;
         scoreEl.textContent = "0";
         spd = 3;
         stack = [];
         dir = 1;
-        updateCoinDisplay();
+        updateRewardDisplay();
         multiplierTime = 0;
         consecutivePerfects = 0;
         lastLoopTime = performance.now();
@@ -220,7 +224,7 @@
         }
         sessionCoins += gain;
         totalCoins += gain;
-        updateCoinDisplay();
+        updateRewardDisplay();
 
         dir *= -1;
         scrollUp();
@@ -236,7 +240,13 @@
     function endGame() {
         running = false;
         cancelAnimationFrame(raf);
+
+        sessionGems = Math.floor(score / 10);
+        totalGems += sessionGems;
+
         localStorage.setItem('slab_rush_coins', Math.floor(totalCoins));
+        localStorage.setItem('slab_rush_gems', Math.floor(totalGems));
+
         if (soundEnabled) gameOverSound.play().catch(() => { });
         card.innerHTML = `
             <h2>Slab Rush!</h2>
@@ -248,6 +258,13 @@
                 <text x="50%" y="54%" text-anchor="middle" font-size="10" dy=".3em" fill="#b8860b" font-weight="bold">$</text>
               </svg>
               <span>+${Math.floor(sessionCoins)} earned</span>
+            </div>
+            <div style="margin: 5px 0; font-weight: 400; color: #00ff88; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#00ff88" stroke="#008844" stroke-width="1.5">
+                <path d="M6 3L2 9l10 12L22 9l-4-6H6z"></path>
+                <path d="M2 9h20M6 3l4 6m8-6l-4 6m-6 0l4 12m4-12l-4 12"></path>
+              </svg>
+              <span>+${sessionGems} gems earned</span>
             </div>
             <button id="play-btn">Play Again</button>
           `;
@@ -265,7 +282,7 @@
     });
 
     updateSoundIcon();
-    updateCoinDisplay();
+    updateRewardDisplay();
 
     function loop(now) {
         if (!running) return;
