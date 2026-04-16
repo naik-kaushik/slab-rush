@@ -5,7 +5,10 @@
     const scoreEl = document.getElementById("score");
     const overlay = document.getElementById("overlay");
     const card = document.getElementById("card");
-    const perfectEl = document.getElementById("perfect");
+    perfectEl = document.getElementById("perfect"),
+        multiplierContainer = document.getElementById("multiplier-container"),
+        multiplierBadge = document.getElementById("multiplier-badge"),
+        multiplierTimeEl = document.getElementById("multiplier-time");
 
     let W,
         H,
@@ -20,7 +23,10 @@
         soundEnabled = true,
         totalCoins = parseInt(localStorage.getItem('slab_rush_coins') || '0'),
         sessionCoins = 0,
-        lastSpeedScale = 0;
+        lastSpeedScale = 0,
+        multiplierTime = 0,
+        consecutivePerfects = 0,
+        lastLoopTime = 0;
 
     function updateCoinDisplay() {
         document.getElementById("coin-val").textContent = Math.floor(totalCoins);
@@ -120,6 +126,9 @@
         stack = [];
         dir = 1;
         updateCoinDisplay();
+        multiplierTime = 0;
+        consecutivePerfects = 0;
+        lastLoopTime = performance.now();
         const bw = Math.min(W * 0.52, 210);
         const bx = (W - bw) / 2;
         const by = H - BLOCK_H;
@@ -129,7 +138,7 @@
         spawnMov();
         running = true;
         if (raf) cancelAnimationFrame(raf);
-        loop();
+        requestAnimationFrame(loop);
     }
 
     function spawnMov() {
@@ -165,7 +174,25 @@
             mov.x = t.x;
             mov.w = t.w;
             showPerfect();
+
+            if (multiplierTime <= 0) {
+                multiplierTime = 5;
+                consecutivePerfects = 1;
+            } else {
+                consecutivePerfects++;
+                // Calculate bonus: 1.5 * (consecutivePerfects // heightOfTower)
+                const bonus = 1.5 * Math.floor(consecutivePerfects / stack.length);
+                if (bonus > 0) {
+                    multiplierTime += bonus;
+                    multiplierBadge.classList.remove("multiplier-bump");
+                    void multiplierBadge.offsetWidth; // Trigger reflow
+                    multiplierBadge.classList.add("multiplier-bump");
+                }
+            }
+        } else {
+            consecutivePerfects = 0;
         }
+
         const trimmed = {
             x: Math.max(mov.x, t.x),
             y: mov.y,
@@ -187,7 +214,10 @@
         spd = Math.min(spd, 16);
 
         // Reward system
-        const gain = 1 * (score / 5);
+        let gain = 1 * (score / 5);
+        if (multiplierTime > 0) {
+            gain *= 2;
+        }
         sessionCoins += gain;
         totalCoins += gain;
         updateCoinDisplay();
@@ -237,9 +267,21 @@
     updateSoundIcon();
     updateCoinDisplay();
 
-    function loop() {
+    function loop(now) {
         if (!running) return;
         raf = requestAnimationFrame(loop);
+
+        const dt = (now - lastLoopTime) / 1000;
+        lastLoopTime = now;
+
+        if (multiplierTime > 0) {
+            multiplierTime = Math.max(0, multiplierTime - dt);
+            multiplierContainer.classList.add("active");
+            multiplierTimeEl.textContent = multiplierTime.toFixed(1) + "s";
+        } else {
+            multiplierContainer.classList.remove("active");
+        }
+
         ctx.clearRect(0, 0, W, H);
         stack.forEach((b) => {
             if (b.y < H + 30) drawBlock(b.x, b.y, b.w, BLOCK_H, b.color);
