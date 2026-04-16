@@ -8,6 +8,7 @@
   <title>Slab Rush!</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/carbon.css" />
   <script type="text/javascript">
     (function (c, l, a, r, i, t, y) {
       c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
@@ -21,12 +22,24 @@
   <div id="gw">
     <canvas id="c"></canvas>
     <div id="score">0</div>
+    <div id="multiplier-container">
+      <div id="multiplier-badge">2X</div>
+      <div id="multiplier-time">5.0s</div>
+    </div>
     <div id="coin-counter">
       <svg class="coin-icon" viewBox="0 0 24 24" fill="#ffd700" stroke="#b8860b" stroke-width="1.5">
         <circle cx="12" cy="12" r="9"></circle>
         <text x="50%" y="54%" text-anchor="middle" font-size="10" dy=".3em" fill="#b8860b" font-weight="bold">$</text>
       </svg>
       <span id="coin-val">0</span>
+      <div id="active-boost-badge">1.0x</div>
+    </div>
+    <div id="gem-counter">
+      <svg class="gem-icon" viewBox="0 0 24 24" fill="#00ff88" stroke="#008844" stroke-width="1.5">
+        <path d="M6 3L2 9l10 12L22 9l-4-6H6z"></path>
+        <path d="M2 9h20M6 3l4 6m8-6l-4 6m-6 0l4 12m4-12l-4 12"></path>
+      </svg>
+      <span id="gem-val">0</span>
     </div>
     <div id="hint">
       <span class="mobile-hint">tap</span>
@@ -34,12 +47,73 @@
     </div>
     <div id="perfect">Perfect</div>
     <button id="sound-btn" aria-label="Toggle Sound"></button>
+    <button id="kofi-btn" aria-label="Support on Ko-fi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+        <line x1="6" y1="1" x2="6" y2="4"></line>
+        <line x1="10" y1="1" x2="10" y2="4"></line>
+        <line x1="14" y1="1" x2="14" y2="4"></line>
+      </svg>
+    </button>
     <div id="overlay">
       <div id="card" class="glass">
         <img id="logo" src="assets/images/game_logo.png" alt="Slab Rush! Logo" />
         <h2>Slab Rush!</h2>
         <div class="tagline">How high can you go?</div>
-        <button id="play-btn">Play</button>
+        <button id="play-btn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"></path>
+          </svg>
+          Play
+        </button>
+        <button id="shop-btn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          Shop
+        </button>
+      </div>
+    </div>
+
+    <!-- Shop Modal -->
+    <div id="shop-modal" class="modal-overlay">
+      <div id="shop-card" class="glass">
+        <div class="shop-header">
+          <h3>Shop</h3>
+          <button id="close-shop" aria-label="Close Shop">&times;</button>
+        </div>
+        <div class="shop-tabs">
+          <button class="shop-tab active" data-tab="skins">Skins</button>
+          <button class="shop-tab" data-tab="upgrades">Upgrades</button>
+        </div>
+        <div class="shop-content">
+          <div id="skins-grid" class="shop-grid active">
+            <!-- Skins will be injected here -->
+          </div>
+          <div id="upgrades-grid" class="shop-grid">
+            <!-- Upgrades will be injected here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ko-fi Modal -->
+    <div id="kofi-modal" class="modal-overlay">
+      <div id="kofi-card" class="glass">
+        <div class="shop-header">
+          <h3>Support Developer</h3>
+          <button id="close-kofi" aria-label="Close Support">&times;</button>
+        </div>
+        <div class="kofi-frame-container">
+          <iframe id='kofiframe' src='https://ko-fi.com/naik_kaushik/?hidefeed=true&widget=true&embed=true&preview=true'
+            style='border:none;width:100%;padding:4px;background:#f9f9f9;border-radius:12px;' height='650'
+            title='naik_kaushik'>
+          </iframe>
+        </div>
       </div>
     </div>
   </div>

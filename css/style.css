@@ -12,6 +12,39 @@
       overflow: hidden;
     }
 
+    /* Keep Ko-fi toggle on top, but don't block the screen */
+    #kofi-btn {
+      position: absolute;
+      top: 74px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.3s ease;
+      padding: 10px;
+    }
+
+    #kofi-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(114, 164, 242, 0.4);
+      color: #72a4f2;
+    }
+
+    #kofi-btn svg {
+      width: 100%;
+      height: 100%;
+    }
+
     #gw {
       width: 100%;
       height: 100vh;
@@ -26,6 +59,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background 0.5s ease, background-image 0.5s ease;
     }
 
     canvas {
@@ -79,11 +113,14 @@
     }
 
     .glass {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(15, 25, 35, 0.5);
+      /* Darker base */
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
     }
 
     #overlay {
@@ -150,18 +187,41 @@
 
     #play-btn {
       margin-top: 8px;
-      padding: 14px 48px;
+      width: 220px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
       font-size: 13px;
-      font-weight: 400;
+      font-weight: 600;
+      /* Bolder */
       letter-spacing: 2px;
       text-transform: uppercase;
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.4);
       border-radius: 50px;
       background: rgba(255, 255, 255, 0.1);
       color: #fff;
       cursor: pointer;
       font-family: "Outfit", sans-serif;
       transition: background 0.2s, border-color 0.2s, transform 0.1s;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      /* Readability */
+    }
+
+    #shop-btn {
+      width: 220px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
     }
 
     #play-btn:hover {
@@ -171,6 +231,36 @@
 
     #play-btn:active {
       transform: scale(0.97);
+    }
+
+    .secondary-btn {
+      margin-top: 4px;
+      padding: 10px 32px;
+      font-size: 11px;
+      font-weight: 600;
+      /* Bolder */
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50px;
+      background: rgba(0, 0, 0, 0.15);
+      /* Slightly darker */
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      font-family: "Outfit", sans-serif;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      /* Readability */
+    }
+
+    .secondary-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.4);
     }
 
     #perfect {
@@ -189,11 +279,67 @@
       transition: opacity 0.15s;
     }
 
-    /* Sound Icon Button */
+    /* Rewind Button Styling */
+    #revive-btn {
+      margin-top: 8px;
+      padding: 14px 48px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #00ff88, #00bd68);
+      color: #000;
+      cursor: pointer;
+      font-family: "Outfit", sans-serif;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(0, 255, 136, 0.4);
+      animation: pulseGreen 2s infinite;
+    }
+
+    #revive-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 25px rgba(0, 255, 136, 0.6);
+    }
+
+    #revive-btn:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes pulseGreen {
+      0% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 15px rgba(0, 255, 136, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 136, 0);
+      }
+    }
+
+    /* Noir Theme Contrast Fix */
+    .noir-active h2,
+    .noir-active .tagline,
+    .noir-active .sub,
+    .noir-active #score {
+      color: #fff !important;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8) !important;
+    }
+
+    .noir-active .glass {
+      background: rgba(0, 0, 0, 0.45) !important;
+      backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
     #sound-btn {
       position: absolute;
-      top: 24px;
-      right: 24px;
+      top: 20px;
+      right: 20px;
       width: 44px;
       height: 44px;
       display: flex;
@@ -206,7 +352,7 @@
       border-radius: 12px;
       color: #fff;
       cursor: pointer;
-      z-index: 30;
+      z-index: 100;
       transition: background 0.2s, transform 0.1s;
     }
 
@@ -240,10 +386,45 @@
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
       color: #fff;
-      z-index: 30;
+      z-index: 100;
       font-family: "Outfit", sans-serif;
       font-weight: 600;
       font-size: 16px;
+      min-width: 90px;
+    }
+
+    #active-boost-badge {
+      position: absolute;
+      top: -12px;
+      right: -8px;
+      background: linear-gradient(135deg, #ffd700, #ffa500);
+      color: #000;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      display: none;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #active-boost-badge.active {
+      display: block;
+      animation: scaleIn 0.3s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
 
     #coin-counter svg {
@@ -253,4 +434,374 @@
 
     .coin-icon {
       filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4));
+    }
+
+    #gem-counter {
+      position: absolute;
+      top: 76px;
+      left: 24px;
+      height: 44px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: #fff;
+      z-index: 100;
+      font-family: "Outfit", sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      transition: transform 0.2s;
+      min-width: 90px;
+    }
+
+    .gem-icon {
+      width: 20px;
+      height: 20px;
+      filter: drop-shadow(0 0 4px rgba(0, 255, 136, 0.4));
+    }
+
+    /* Multiplier UI */
+    #multiplier-container {
+      position: absolute;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      z-index: 10;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    #multiplier-container.active {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #multiplier-badge {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+      animation: pulse 2s infinite;
+    }
+
+    #multiplier-time {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      font-weight: 400;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    @keyframes bump {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.3);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .multiplier-bump {
+      animation: bump 0.4s ease-out !important;
+    }
+
+    /* Shop Button */
+    #shop-btn {
+      margin-top: 8px;
+      padding: 14px 48px;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      font-family: "Outfit", sans-serif;
+      transition: all 0.2s;
+    }
+
+    #shop-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #fff;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    #shop-card {
+      width: 100%;
+      max-width: 400px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      padding: 32px;
+      overflow: hidden;
+    }
+
+    .shop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .shop-header h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    #close-shop,
+    #close-kofi {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 32px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      transition: color 0.2s;
+    }
+
+    #close-shop:hover,
+    #close-kofi:hover {
+      color: #fff;
+    }
+
+    .shop-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .shop-tab {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .shop-tab.active {
+      color: #fff;
+    }
+
+    .shop-tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: -13px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: #00ff88;
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    }
+
+    .shop-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .shop-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .shop-content::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+    }
+
+    .shop-grid {
+      display: none;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .shop-grid.active {
+      display: grid;
+    }
+
+    .shop-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .shop-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .shop-item.equipped {
+      border-color: #00ff88;
+      background: rgba(0, 255, 136, 0.08);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.15);
+    }
+
+    .item-preview {
+      width: 80px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.2);
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .preview-rect {
+      width: 100%;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .item-info {
+      text-align: center;
+    }
+
+    .item-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: #fff;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .item-price {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .coin-price {
+      color: #ffd700;
+    }
+
+    .gem-price {
+      color: #00ff88;
+    }
+
+    .price-icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    .equipped-badge {
+      font-size: 11px;
+      color: #00ff88;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 600;
+    }
+
+    /* Ko-fi Modal Specifics */
+    #kofi-card {
+      width: 90%;
+      max-width: 440px;
+      max-height: 85vh;
+      overflow: hidden;
+      padding: 25px 20px 20px 20px !important;
+    }
+
+    .kofi-frame-container {
+      margin-top: 15px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f9f9f9;
+      height: 650px;
+    }
+
+    .support-msg {
+      margin-top: 15px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.7) !important;
+      line-height: 1.6;
+    }
+
+    .support-msg a {
+      color: #72a4f2 !important;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      display: block;
+      /* Force new line */
+    }
+
+    .support-msg a:hover {
+      opacity: 1;
+      text-decoration: underline;
     }
