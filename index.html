@@ -72,6 +72,10 @@
         <img id="logo" src="assets/images/game_logo.png" alt="Slab Rush! Logo" />
         <h2>Slab Rush!</h2>
         <div class="tagline">How high can you go?</div>
+        <div id="pb-display" style="display: none;">
+          <div class="sub">Personal Best</div>
+          <div class="pb-val">0</div>
+        </div>
         <button id="play-btn">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z"></path>
@@ -128,6 +132,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
   <script src="js/game.js"></script>
 </body>
 

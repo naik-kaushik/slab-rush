@@ -24,12 +24,14 @@
         soundEnabled = true,
         totalCoins = parseInt(localStorage.getItem('slab_rush_coins') || '0'),
         totalGems = parseInt(localStorage.getItem('slab_rush_gems') || '0'),
+        highScore = parseInt(localStorage.getItem('slab_rush_highscore') || '0'),
         sessionCoins = 0,
         sessionGems = 0,
         lastSpeedScale = 0,
         multiplierTime = 0,
         multiplierValue = 1,
         consecutivePerfects = 0,
+        hasCelebratedPB = false,
         lastLoopTime = 0;
 
     const SKINS = [
@@ -119,6 +121,16 @@
         document.getElementById("coin-val").textContent = Math.floor(totalCoins);
         document.getElementById("gem-val").textContent = Math.floor(totalGems);
 
+        const pbDisplay = document.getElementById("pb-display");
+        if (pbDisplay) {
+            if (highScore > 0) {
+                pbDisplay.style.display = "block";
+                pbDisplay.querySelector(".pb-val").textContent = highScore;
+            } else {
+                pbDisplay.style.display = "none";
+            }
+        }
+
         const boostBadge = document.getElementById("active-boost-badge");
         const boosterLevel = getCurrentBoosterLevel();
         if (boosterLevel > 0) {
@@ -146,9 +158,11 @@
     const chime = new Audio("assets/audio/chime_sound.mp3");
     const gameOverSound = new Audio("assets/audio/game_over.mp3");
     const swooshSound = new Audio("assets/audio/swoosh.mp3");
+    const pbSound = new Audio("assets/audio/personal-best.mp3");
     chime.volume = 0.5;
     gameOverSound.volume = 0.5;
     swooshSound.volume = 0.5;
+    pbSound.volume = 0.6;
 
     const ICON_ON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
     const ICON_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
@@ -156,6 +170,20 @@
     function updateSoundIcon() {
         document.getElementById("sound-btn").innerHTML = soundEnabled ? ICON_ON : ICON_OFF;
     }
+
+    function showToast(msg) {
+        let t = document.getElementById("toast");
+        if (!t) {
+            t = document.createElement("div");
+            t.id = "toast";
+            t.className = "toast";
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.classList.add("active");
+        setTimeout(() => t.classList.remove("active"), 3000);
+    }
+
 
     const BLOCK_H = 22,
         TILT = 8;
@@ -252,6 +280,7 @@
         consecutivePerfects = 0;
         lastLoopTime = performance.now();
         hasUsedRevive = false;
+        hasCelebratedPB = false;
         let bw = Math.min(W * 0.52, 210);
         const bx = (W - bw) / 2;
         const by = H - BLOCK_H;
@@ -304,8 +333,8 @@
                 consecutivePerfects = 1;
             } else {
                 consecutivePerfects++;
-                multiplierValue *= 2;
-                multiplierTime += 1.5;
+                multiplierValue = 2;
+                multiplierTime += 5;
             }
             multiplierBadge.textContent = multiplierValue + "X";
             multiplierBadge.classList.remove("multiplier-bump");
@@ -324,6 +353,21 @@
         stack.push(trimmed);
         score++;
         scoreEl.textContent = score;
+        
+        // Celebration for Personal Best!
+        if (highScore > 0 && score > highScore && !hasCelebratedPB) {
+            hasCelebratedPB = true;
+            if (soundEnabled) pbSound.play().catch(() => { });
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    zIndex: 1000
+                });
+            }
+        }
+        
         playChime();
 
         // Speed scaling with Stabilizer
@@ -375,13 +419,22 @@
 
         if (soundEnabled) gameOverSound.play().catch(() => { });
 
+        let isNewBest = false;
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('slab_rush_highscore', highScore);
+            isNewBest = true;
+        }
+
         const canRevive = timeMachineCount > 0 && !hasUsedRevive && stack.length > 5;
         const isSmallScreen = window.innerWidth <= 400;
 
         card.innerHTML = `
             <h2>Slab Rush!</h2>
+            ${isNewBest ? '<div class="new-best-badge">NEW BEST!</div>' : ''}
             <div class="big">${score}</div>
             <div class="sub">blocks stacked</div>
+            ${!isNewBest && highScore > 0 ? `<div class="pb-small">Best: ${highScore}</div>` : ''}
             <div style="margin: 10px 0; font-weight: 400; color: #ffd700; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffd700" stroke="#b8860b" stroke-width="1.5">
                 <circle cx="12" cy="12" r="9"></circle>
@@ -415,6 +468,24 @@
                 </svg>
                 Play Again
             </button>
+            ${isNewBest ? `
+                <div class="share-row">
+                    <button id="share-btn" title="Share on X">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.18l4.73 6.261 5.334-6.261zm-1.16 17.52h1.833L7.084 4.126H5.117L17.084 19.77z"></path>
+                        </svg>
+                    </button>
+                    <button id="native-share-btn" title="More Options">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                    </button>
+                </div>
+            ` : ''}
             <button id="shop-btn-end" class="secondary-btn">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="9" cy="21" r="1"></circle>
@@ -447,6 +518,52 @@
         document.getElementById("shop-btn-end").addEventListener("click", openShop);
         if (canRevive) {
             document.getElementById("revive-btn").addEventListener("click", rewindGame);
+        }
+        if (isNewBest) {
+            document.getElementById("share-btn").addEventListener("click", async () => {
+                const btn = document.getElementById("share-btn");
+                btn.disabled = true;
+                
+                try {
+                    const text = `🏗️ SLAB RUSH! 🏗️\nI just stacked a massive tower of ${score} blocks! 🚀✨\n\nCan you beat my record? Try it at https://naik-kaushik.github.io/slab-rush/ 🏆\n#SlabRush #Gaming #Highscore`;
+                    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+                    
+                    showToast("Opening X...");
+                    
+                    setTimeout(() => {
+                        window.open(tweetUrl, '_blank');
+                        btn.disabled = false;
+                    }, 800);
+                } catch (err) {
+                    console.error(err);
+                    showToast("Failed to copy image.");
+                    btn.disabled = false;
+                }
+            });
+
+            document.getElementById("native-share-btn").addEventListener("click", async () => {
+                const text = `🏗️ SLAB RUSH! 🏗️\nI just stacked a massive tower of ${score} blocks! 🚀✨\n\nCan you beat my record? Try it at https://naik-kaushik.github.io/slab-rush/ 🏆\n#SlabRush #Gaming #Highscore`;
+                
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'Slab Rush!',
+                            text: text,
+                            url: window.location.href
+                        });
+                    } catch (err) {
+                        console.error("Native share failed", err);
+                    }
+                } else {
+                    // Fallback to clipboard
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        showToast("Message copied to clipboard!");
+                    } catch (err) {
+                        showToast("Sharing not supported.");
+                    }
+                }
+            });
         }
         const supportLink = document.querySelector(".support-msg a");
         if (supportLink) {

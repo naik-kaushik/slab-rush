@@ -31,7 +31,8 @@ A sleek, minimalist stacking game built with HTML5 Canvas and Vanilla JavaScript
 1. **Chime Sound Effect** by [freesound_community](https://pixabay.com/users/freesound_community-46691455/) from [Pixabay](https://pixabay.com/sound-effects/)
 2. **Game over Sound Effect** by [Ribhav Agrawal](https://pixabay.com/users/ribhavagrawal-39286533/) from [Pixabay](https://pixabay.com/sound-effects/)
 3. **Swoosh Sound Effect** by [Universfield](https://pixabay.com/users/universfield-28281460/) from [Pixabay](https://pixabay.com/)
-4. **CSS Background Patterns** by [MagicPattern](https://www.magicpattern.design/tools/css-backgrounds)
+4. **Personal Best Sound Effect** by [Universfield](https://pixabay.com/users/universfield-28281460/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=402152) from [Pixabay](https://pixabay.com/sound-effects//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=402152)
+5. **CSS Background Patterns** by [MagicPattern](https://www.magicpattern.design/tools/css-backgrounds)
 
 ## Support
 
