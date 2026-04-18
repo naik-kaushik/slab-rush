@@ -8,7 +8,8 @@
     perfectEl = document.getElementById("perfect"),
         multiplierContainer = document.getElementById("multiplier-container"),
         multiplierBadge = document.getElementById("multiplier-badge"),
-        multiplierTimeEl = document.getElementById("multiplier-time");
+        multiplierTimeEl = document.getElementById("multiplier-time"),
+        kofiBtn = document.getElementById("kofi-btn");
 
     let W,
         H,
@@ -27,6 +28,7 @@
         sessionGems = 0,
         lastSpeedScale = 0,
         multiplierTime = 0,
+        multiplierValue = 1,
         consecutivePerfects = 0,
         lastLoopTime = 0;
 
@@ -233,6 +235,9 @@
 
     function startGame() {
         overlay.style.display = "none";
+        if (kofiBtn) kofiBtn.style.display = "none";
+        document.getElementById("coin-counter").style.display = "flex";
+        document.getElementById("gem-counter").style.display = "flex";
         score = 0;
         sessionCoins = 0;
         sessionGems = 0;
@@ -243,6 +248,7 @@
         dir = 1;
         updateRewardDisplay();
         multiplierTime = 0;
+        multiplierValue = 1;
         consecutivePerfects = 0;
         lastLoopTime = performance.now();
         hasUsedRevive = false;
@@ -294,18 +300,17 @@
 
             if (multiplierTime <= 0) {
                 multiplierTime = 5;
+                multiplierValue = 2;
                 consecutivePerfects = 1;
             } else {
                 consecutivePerfects++;
-                // Calculate bonus: 1.5 * (consecutivePerfects // heightOfTower)
-                const bonus = 1.5 * Math.floor(consecutivePerfects / stack.length);
-                if (bonus > 0) {
-                    multiplierTime += bonus;
-                    multiplierBadge.classList.remove("multiplier-bump");
-                    void multiplierBadge.offsetWidth; // Trigger reflow
-                    multiplierBadge.classList.add("multiplier-bump");
-                }
+                multiplierValue *= 2;
+                multiplierTime += 1.5;
             }
+            multiplierBadge.textContent = multiplierValue + "X";
+            multiplierBadge.classList.remove("multiplier-bump");
+            void multiplierBadge.offsetWidth;
+            multiplierBadge.classList.add("multiplier-bump");
         } else {
             consecutivePerfects = 0;
         }
@@ -336,7 +341,7 @@
         // Reward system with Booster
         let gain = 1 * (score / 5);
         if (multiplierTime > 0) {
-            gain *= 2;
+            gain *= multiplierValue;
         }
         const boosterLevel = getCurrentBoosterLevel();
         if (boosterLevel > 0) {
@@ -371,24 +376,29 @@
         if (soundEnabled) gameOverSound.play().catch(() => { });
 
         const canRevive = timeMachineCount > 0 && !hasUsedRevive && stack.length > 5;
+        const isSmallScreen = window.innerWidth <= 400;
 
         card.innerHTML = `
             <h2>Slab Rush!</h2>
             <div class="big">${score}</div>
             <div class="sub">blocks stacked</div>
-            <div style="margin: 10px 0; font-weight: 400; color: #ffd700; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffd700" stroke="#b8860b" stroke-width="1.5">
+            <div style="margin: 10px 0; font-weight: 400; color: #ffd700; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffd700" stroke="#b8860b" stroke-width="1.5">
                 <circle cx="12" cy="12" r="9"></circle>
                 <text x="50%" y="54%" text-anchor="middle" font-size="10" dy=".3em" fill="#b8860b" font-weight="bold">$</text>
               </svg>
-              <span>+${Math.floor(sessionCoins)} earned</span>
+              <span>+${Math.floor(sessionCoins)}${isSmallScreen ? '' : ' earned'}</span>
+              ${isSmallScreen ? `<span style="color: rgba(255,255,255,0.3); margin: 0 2px;">·</span>
+              <span style="color: rgba(255,255,255,0.5); font-size: 12px;">Total: ${Math.floor(totalCoins)}</span>` : ''}
             </div>
-            <div style="margin: 5px 0; font-weight: 400; color: #00ff88; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#00ff88" stroke="#008844" stroke-width="1.5">
+            <div style="margin: 2px 0; font-weight: 400; color: #00ff88; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#00ff88" stroke="#008844" stroke-width="1.5">
                 <path d="M6 3L2 9l10 12L22 9l-4-6H6z"></path>
                 <path d="M2 9h20M6 3l4 6m8-6l-4 6m-6 0l4 12m4-12l-4 12"></path>
               </svg>
-              <span>+${sessionGems} gems earned</span>
+              <span>+${sessionGems}${isSmallScreen ? '' : ' gems earned'}</span>
+              ${isSmallScreen ? `<span style="color: rgba(255,255,255,0.3); margin: 0 2px;">·</span>
+              <span style="color: rgba(255,255,255,0.5); font-size: 12px;">Total: ${Math.floor(totalGems)}</span>` : ''}
             </div>
             ${canRevive ? `
                 <button id="revive-btn">
@@ -418,7 +428,22 @@
             </div>
           `;
         overlay.style.display = "flex";
-        document.getElementById("play-btn").addEventListener("click", startGame);
+        if (kofiBtn) kofiBtn.style.display = "flex";
+        if (isSmallScreen) {
+            document.getElementById("coin-counter").style.display = "none";
+            document.getElementById("gem-counter").style.display = "none";
+        }
+
+        const playBtn = document.getElementById("play-btn");
+        playBtn.disabled = true;
+        playBtn.style.opacity = "0.4";
+        playBtn.style.pointerEvents = "none";
+        setTimeout(() => {
+            playBtn.disabled = false;
+            playBtn.style.opacity = "1";
+            playBtn.style.pointerEvents = "auto";
+        }, 1500);
+        playBtn.addEventListener("click", startGame);
         document.getElementById("shop-btn-end").addEventListener("click", openShop);
         if (canRevive) {
             document.getElementById("revive-btn").addEventListener("click", rewindGame);
@@ -448,6 +473,9 @@
         scoreEl.textContent = score;
 
         overlay.style.display = "none";
+        if (kofiBtn) kofiBtn.style.display = "none";
+        document.getElementById("coin-counter").style.display = "flex";
+        document.getElementById("gem-counter").style.display = "flex";
         running = true;
         spawnMov();
         requestAnimationFrame(loop);
@@ -460,7 +488,18 @@
         soundEnabled = !soundEnabled;
         updateSoundIcon();
     });
-    const kofiBtn = document.getElementById("kofi-btn");
+
+    const fullscreenBtn = document.getElementById("fullscreen-btn");
+    fullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            document.exitFullscreen().catch(() => {});
+        }
+    });
+    document.addEventListener("fullscreenchange", () => {
+        fullscreenBtn.classList.toggle("active", !!document.fullscreenElement);
+    });
     const kofiModal = document.getElementById("kofi-modal");
     const closeKofiBtn = document.getElementById("close-kofi");
 
@@ -640,6 +679,7 @@
             multiplierTimeEl.textContent = multiplierTime.toFixed(1) + "s";
         } else {
             multiplierContainer.classList.remove("active");
+            multiplierValue = 1;
         }
 
         ctx.clearRect(0, 0, W, H);
