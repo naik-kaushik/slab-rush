@@ -488,6 +488,18 @@
         soundEnabled = !soundEnabled;
         updateSoundIcon();
     });
+
+    const fullscreenBtn = document.getElementById("fullscreen-btn");
+    fullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            document.exitFullscreen().catch(() => {});
+        }
+    });
+    document.addEventListener("fullscreenchange", () => {
+        fullscreenBtn.classList.toggle("active", !!document.fullscreenElement);
+    });
     const kofiModal = document.getElementById("kofi-modal");
     const closeKofiBtn = document.getElementById("close-kofi");
 
