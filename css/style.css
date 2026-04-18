@@ -175,6 +175,45 @@
       margin-bottom: 6px;
     }
 
+    #pb-display {
+      margin-bottom: 12px;
+      text-align: center;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .pb-val {
+      font-size: 32px;
+      font-weight: 600;
+      color: #ffd700;
+      text-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+      letter-spacing: -1px;
+    }
+
+    .new-best-badge {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+      margin-bottom: 8px;
+      animation: pulse 2s infinite;
+    }
+
+    .pb-small {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 215, 0, 0.82);
+      margin-top: -8px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     #logo {
       width: 90px;
       height: 90px;
@@ -261,6 +300,78 @@
       background: rgba(255, 255, 255, 0.1);
       color: #fff;
       border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .share-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      width: 100%;
+      margin: 12px 0 4px 0;
+    }
+
+    #share-btn, #native-share-btn {
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    #share-btn {
+      background: #000;
+      color: #fff;
+    }
+
+    #native-share-btn {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    #share-btn .btn-icon, #native-share-btn .btn-icon {
+      margin: 0;
+      width: 22px;
+      height: 22px;
+    }
+
+    #share-btn:hover, #native-share-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    #native-share-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(0, 255, 136, 0.9);
+      color: #000;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 14px;
+      font-family: 'Outfit', sans-serif;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+    }
+
+    .toast.active {
+      transform: translateX(-50%) translateY(0);
     }
 
     #perfect {
