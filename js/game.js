@@ -11,6 +11,102 @@
         multiplierTimeEl = document.getElementById("multiplier-time"),
         kofiBtn = document.getElementById("kofi-btn");
 
+    const SecureStorage = {
+        _key: '_sr_data',
+        _salt: 'v1_slab_rush_secure',
+        
+        _hash(str) {
+            let h = 0;
+            for (let i = 0; i < str.length; i++) {
+                h = ((h << 5) - h) + str.charCodeAt(i);
+                h |= 0;
+            }
+            return h.toString(36);
+        },
+
+        _cipher(str) {
+            const k = this._salt;
+            let res = "";
+            for (let i = 0; i < str.length; i++) {
+                res += String.fromCharCode(str.charCodeAt(i) ^ k.charCodeAt(i % k.length));
+            }
+            return btoa(res);
+        },
+
+        _decipher(str) {
+            try {
+                const k = this._salt;
+                const d = atob(str);
+                let res = "";
+                for (let i = 0; i < d.length; i++) {
+                    res += String.fromCharCode(d.charCodeAt(i) ^ k.charCodeAt(i % k.length));
+                }
+                return res;
+            } catch (e) { return null; }
+        },
+
+        save(state) {
+            const data = JSON.stringify(state);
+            const packet = JSON.stringify({
+                d: data,
+                h: this._hash(data + this._salt)
+            });
+            localStorage.setItem(this._key, this._cipher(packet));
+        },
+
+        load() {
+            const raw = localStorage.getItem(this._key);
+            if (!raw) return null;
+            const unscrambled = this._decipher(raw);
+            if (!unscrambled) return { corrupted: true };
+            try {
+                const packet = JSON.parse(unscrambled);
+                if (this._hash(packet.d + this._salt) !== packet.h) {
+                    return { corrupted: true };
+                }
+                return JSON.parse(packet.d);
+            } catch (e) { return { corrupted: true }; }
+        }
+    };
+
+    const DEFAULT_STATE = {
+        totalCoins: 0,
+        totalGems: 0,
+        highScore: 0,
+        currentSkinId: 'classic',
+        ownedSkins: ['classic'],
+        ownedUpgrades: [],
+        timeMachineCount: 0
+    };
+
+    let gameState = SecureStorage.load();
+    let cheatDetected = false;
+
+    if (!gameState) {
+        // New player or no data
+        gameState = { ...DEFAULT_STATE };
+        // Check for migration
+        const legacyCoins = localStorage.getItem('slab_rush_coins');
+        if (legacyCoins !== null) {
+            gameState.totalCoins = parseInt(legacyCoins) || 0;
+            gameState.totalGems = parseInt(localStorage.getItem('slab_rush_gems')) || 0;
+            gameState.highScore = parseInt(localStorage.getItem('slab_rush_highscore')) || 0;
+            gameState.currentSkinId = localStorage.getItem('slab_rush_current_skin') || 'classic';
+            gameState.ownedSkins = JSON.parse(localStorage.getItem('slab_rush_owned_skins') || '["classic"]');
+            gameState.ownedUpgrades = JSON.parse(localStorage.getItem('slab_rush_owned_upgrades') || '[]');
+            gameState.timeMachineCount = parseInt(localStorage.getItem('slab_rush_time_machine_count') || '0');
+            
+            // Clear legacy keys
+            ['slab_rush_coins', 'slab_rush_gems', 'slab_rush_highscore', 'slab_rush_current_skin', 
+             'slab_rush_owned_skins', 'slab_rush_owned_upgrades', 'slab_rush_time_machine_count'].forEach(k => localStorage.removeItem(k));
+            SecureStorage.save(gameState);
+        }
+    } else if (gameState.corrupted) {
+        gameState = { ...DEFAULT_STATE };
+        cheatDetected = true;
+        SecureStorage.save(gameState);
+    }
+
     let W,
         H,
         stack = [],
@@ -22,9 +118,6 @@
         spd = 3,
         perfectTimeout,
         soundEnabled = true,
-        totalCoins = parseInt(localStorage.getItem('slab_rush_coins') || '0'),
-        totalGems = parseInt(localStorage.getItem('slab_rush_gems') || '0'),
-        highScore = parseInt(localStorage.getItem('slab_rush_highscore') || '0'),
         sessionCoins = 0,
         sessionGems = 0,
         lastSpeedScale = 0,
@@ -106,26 +199,30 @@
         }
     ];
 
-    let currentSkinId = localStorage.getItem('slab_rush_current_skin') || 'classic';
-    let ownedSkins = JSON.parse(localStorage.getItem('slab_rush_owned_skins') || '["classic"]');
-    let ownedUpgrades = JSON.parse(localStorage.getItem('slab_rush_owned_upgrades') || '[]');
-    let timeMachineCount = parseInt(localStorage.getItem('slab_rush_time_machine_count') || '0');
+    // Anti-Cheat Modal Logic
+    if (cheatDetected) {
+        const acModal = document.getElementById("anticheat-modal");
+        acModal.classList.add("active");
+        document.getElementById("close-anticheat").addEventListener("click", () => {
+            acModal.classList.remove("active");
+        });
+    }
     let hasUsedRevive = false;
 
     function getActivePalette() {
-        const skin = SKINS.find(s => s.id === currentSkinId) || SKINS[0];
+        const skin = SKINS.find(s => s.id === gameState.currentSkinId) || SKINS[0];
         return skin.colors;
     }
 
     function updateRewardDisplay() {
-        document.getElementById("coin-val").textContent = Math.floor(totalCoins);
-        document.getElementById("gem-val").textContent = Math.floor(totalGems);
+        document.getElementById("coin-val").textContent = Math.floor(gameState.totalCoins);
+        document.getElementById("gem-val").textContent = Math.floor(gameState.totalGems);
 
         const pbDisplay = document.getElementById("pb-display");
         if (pbDisplay) {
-            if (highScore > 0) {
+            if (gameState.highScore > 0) {
                 pbDisplay.style.display = "block";
-                pbDisplay.querySelector(".pb-val").textContent = highScore;
+                pbDisplay.querySelector(".pb-val").textContent = gameState.highScore;
             } else {
                 pbDisplay.style.display = "none";
             }
@@ -143,15 +240,15 @@
     }
 
     function getCurrentBoosterLevel() {
-        if (ownedUpgrades.includes('coin_boost_3')) return 3;
-        if (ownedUpgrades.includes('coin_boost_2')) return 2;
-        if (ownedUpgrades.includes('coin_boost_1')) return 1;
+        if (gameState.ownedUpgrades.includes('coin_boost_3')) return 3;
+        if (gameState.ownedUpgrades.includes('coin_boost_2')) return 2;
+        if (gameState.ownedUpgrades.includes('coin_boost_1')) return 1;
         return 0;
     }
 
     function getSpeedStabilizerLevel() {
-        if (ownedUpgrades.includes('speed_stab_2')) return 2;
-        if (ownedUpgrades.includes('speed_stab_1')) return 1;
+        if (gameState.ownedUpgrades.includes('speed_stab_2')) return 2;
+        if (gameState.ownedUpgrades.includes('speed_stab_1')) return 1;
         return 0;
     }
 
@@ -355,7 +452,7 @@
         scoreEl.textContent = score;
         
         // Celebration for Personal Best!
-        if (highScore > 0 && score > highScore && !hasCelebratedPB) {
+        if (gameState.highScore > 0 && score > gameState.highScore && !hasCelebratedPB) {
             hasCelebratedPB = true;
             if (soundEnabled) pbSound.play().catch(() => { });
             if (typeof confetti === 'function') {
@@ -392,7 +489,7 @@
             gain *= UPGRADES[0].levels[boosterLevel - 1].effect;
         }
         sessionCoins += gain;
-        totalCoins += gain;
+        gameState.totalCoins += gain;
         updateRewardDisplay();
 
         dir *= -1;
@@ -412,21 +509,20 @@
         cancelAnimationFrame(raf);
 
         sessionGems = Math.floor(score / 10);
-        totalGems += sessionGems;
-
-        localStorage.setItem('slab_rush_coins', Math.floor(totalCoins));
-        localStorage.setItem('slab_rush_gems', Math.floor(totalGems));
+        gameState.totalGems += sessionGems;
 
         if (soundEnabled) gameOverSound.play().catch(() => { });
 
         let isNewBest = false;
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('slab_rush_highscore', highScore);
+        if (score > gameState.highScore) {
+            gameState.highScore = score;
             isNewBest = true;
         }
+        
+        // Save state at end of game
+        SecureStorage.save(gameState);
 
-        const canRevive = timeMachineCount > 0 && !hasUsedRevive && stack.length > 5;
+        const canRevive = gameState.timeMachineCount > 0 && !hasUsedRevive && stack.length > 5;
         const isSmallScreen = window.innerWidth <= 400;
 
         card.innerHTML = `
@@ -434,7 +530,7 @@
             ${isNewBest ? '<div class="new-best-badge">NEW BEST!</div>' : ''}
             <div class="big">${score}</div>
             <div class="sub">blocks stacked</div>
-            ${!isNewBest && highScore > 0 ? `<div class="pb-small">Best: ${highScore}</div>` : ''}
+            ${!isNewBest && gameState.highScore > 0 ? `<div class="pb-small">Best: ${gameState.highScore}</div>` : ''}
             <div style="margin: 10px 0; font-weight: 400; color: #ffd700; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffd700" stroke="#b8860b" stroke-width="1.5">
                 <circle cx="12" cy="12" r="9"></circle>
@@ -442,7 +538,7 @@
               </svg>
               <span>+${Math.floor(sessionCoins)}${isSmallScreen ? '' : ' earned'}</span>
               ${isSmallScreen ? `<span style="color: rgba(255,255,255,0.3); margin: 0 2px;">·</span>
-              <span style="color: rgba(255,255,255,0.5); font-size: 12px;">Total: ${Math.floor(totalCoins)}</span>` : ''}
+              <span style="color: rgba(255,255,255,0.5); font-size: 12px;">Total: ${Math.floor(gameState.totalCoins)}</span>` : ''}
             </div>
             <div style="margin: 2px 0; font-weight: 400; color: #00ff88; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="#00ff88" stroke="#008844" stroke-width="1.5">
@@ -451,7 +547,7 @@
               </svg>
               <span>+${sessionGems}${isSmallScreen ? '' : ' gems earned'}</span>
               ${isSmallScreen ? `<span style="color: rgba(255,255,255,0.3); margin: 0 2px;">·</span>
-              <span style="color: rgba(255,255,255,0.5); font-size: 12px;">Total: ${Math.floor(totalGems)}</span>` : ''}
+              <span style="color: rgba(255,255,255,0.5); font-size: 12px;">Total: ${Math.floor(gameState.totalGems)}</span>` : ''}
             </div>
             ${canRevive ? `
                 <button id="revive-btn">
@@ -459,7 +555,7 @@
                         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
                         <path d="M3 3v5h5"></path>
                     </svg>
-                    REWIND (${timeMachineCount})
+                    REWIND (${gameState.timeMachineCount})
                 </button>
             ` : ''}
             <button id="play-btn">
@@ -575,10 +671,10 @@
     }
 
     function rewindGame() {
-        if (timeMachineCount <= 0) return;
-        timeMachineCount--;
+        if (gameState.timeMachineCount <= 0) return;
+        gameState.timeMachineCount--;
         hasUsedRevive = true;
-        localStorage.setItem('slab_rush_time_machine_count', timeMachineCount);
+        SecureStorage.save(gameState);
 
         // Rewind stack by 3
         stack = stack.slice(0, Math.max(1, stack.length - 3));
@@ -650,7 +746,7 @@
 
     function getUpgradeState(u) {
         if (u.consumable) {
-            return { count: timeMachineCount, nextPrice: u.price, canBuy: true };
+            return { count: gameState.timeMachineCount, nextPrice: u.price, canBuy: true };
         }
         const level = (u.id === 'coin_boost') ? getCurrentBoosterLevel() : getSpeedStabilizerLevel();
         const next = u.levels[level];
@@ -662,8 +758,8 @@
         const upgradesGrid = document.getElementById("upgrades-grid");
 
         skinsGrid.innerHTML = SKINS.map(skin => {
-            const isOwned = ownedSkins.includes(skin.id);
-            const isEquipped = currentSkinId === skin.id;
+            const isOwned = gameState.ownedSkins.includes(skin.id);
+            const isEquipped = gameState.currentSkinId === skin.id;
             const isGemPrice = skin.priceType === 'gem';
             const priceIcon = isGemPrice ?
                 `<svg class="price-icon" viewBox="0 0 24 24" fill="#00ff88"><path d="M6 3L2 9l10 12L22 9l-4-6H6z"></path></svg>` :
@@ -710,24 +806,21 @@
 
     window.buySkin = (id) => {
         const skin = SKINS.find(s => s.id === id);
-        if (ownedSkins.includes(id)) {
-            currentSkinId = id;
-            localStorage.setItem('slab_rush_current_skin', id);
+        if (gameState.ownedSkins.includes(id)) {
+            gameState.currentSkinId = id;
+            SecureStorage.save(gameState);
         } else {
             const isGem = skin.priceType === 'gem';
-            const balance = isGem ? totalGems : totalCoins;
+            const balance = isGem ? gameState.totalGems : gameState.totalCoins;
             if (balance >= skin.price) {
                 if (isGem) {
-                    totalGems -= skin.price;
-                    localStorage.setItem('slab_rush_gems', totalGems);
+                    gameState.totalGems -= skin.price;
                 } else {
-                    totalCoins -= skin.price;
-                    localStorage.setItem('slab_rush_coins', Math.floor(totalCoins));
+                    gameState.totalCoins -= skin.price;
                 }
-                ownedSkins.push(id);
-                currentSkinId = id;
-                localStorage.setItem('slab_rush_owned_skins', JSON.stringify(ownedSkins));
-                localStorage.setItem('slab_rush_current_skin', id);
+                gameState.ownedSkins.push(id);
+                gameState.currentSkinId = id;
+                SecureStorage.save(gameState);
                 updateRewardDisplay();
             }
         }
@@ -736,7 +829,7 @@
     };
 
     function updateThemeClass() {
-        const skin = SKINS.find(s => s.id === currentSkinId) || SKINS[0];
+        const skin = SKINS.find(s => s.id === gameState.currentSkinId) || SKINS[0];
 
         // Background handling
         if (skin.bg) {
@@ -751,7 +844,7 @@
 
         // Theme Classes
         gw.classList.remove('noir-active', 'carbon-theme');
-        if (currentSkinId === 'monochrome') {
+        if (gameState.currentSkinId === 'monochrome') {
             gw.classList.add('noir-active');
         } else if (skin.themeClass) {
             gw.classList.add(skin.themeClass);
@@ -765,16 +858,14 @@
         if (!u.consumable && state.isMax) return;
 
         const cost = u.consumable ? u.price : state.next.price;
-        if (totalGems >= cost) {
-            totalGems -= cost;
+        if (gameState.totalGems >= cost) {
+            gameState.totalGems -= cost;
             if (u.consumable) {
-                timeMachineCount++;
-                localStorage.setItem('slab_rush_time_machine_count', timeMachineCount);
+                gameState.timeMachineCount++;
             } else {
-                ownedUpgrades.push(state.next.id);
-                localStorage.setItem('slab_rush_owned_upgrades', JSON.stringify(ownedUpgrades));
+                gameState.ownedUpgrades.push(state.next.id);
             }
-            localStorage.setItem('slab_rush_gems', totalGems);
+            SecureStorage.save(gameState);
             updateRewardDisplay();
             renderShop();
         }
