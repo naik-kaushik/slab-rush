@@ -622,14 +622,11 @@
                 
                 try {
                     const text = `🏗️ SLAB RUSH! 🏗️\nI just stacked a massive tower of ${score} blocks! 🚀✨\n\nCan you beat my record? Try it at https://naik-kaushik.github.io/slab-rush/ 🏆\n#SlabRush #Gaming #Highscore`;
-                    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+                    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
                     
                     showToast("Opening X...");
-                    
-                    setTimeout(() => {
-                        window.open(tweetUrl, '_blank');
-                        btn.disabled = false;
-                    }, 800);
+                    window.open(tweetUrl, '_blank');
+                    btn.disabled = false;
                 } catch (err) {
                     console.error(err);
                     showToast("Failed to copy image.");
