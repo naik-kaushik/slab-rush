@@ -304,8 +304,8 @@
                 consecutivePerfects = 1;
             } else {
                 consecutivePerfects++;
-                multiplierValue *= 2;
-                multiplierTime += 1.5;
+                multiplierValue = 2;
+                multiplierTime += 5;
             }
             multiplierBadge.textContent = multiplierValue + "X";
             multiplierBadge.classList.remove("multiplier-bump");
