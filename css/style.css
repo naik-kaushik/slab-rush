@@ -1020,6 +1020,7 @@
     .phantom-theme #score {
       text-shadow: 0 0 20px rgba(255, 255, 255, 0.2) !important;
     }
+
     /* Gold Theme */
     .gold-theme {
       background: radial-gradient(circle at center, #2b2301 0%, #000 100%) !important;
@@ -1030,7 +1031,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      background-image: 
+      background-image:
         radial-gradient(ellipse at center, rgba(255, 215, 0, 0.1) 0%, transparent 75%),
         repeating-linear-gradient(45deg, rgba(212, 175, 55, 0.015) 0px, rgba(212, 175, 55, 0.015) 1px, transparent 1px, transparent 30px);
       background-size: 100% 100%, 60px 60px;
@@ -1039,8 +1040,15 @@
     }
 
     @keyframes goldShimmer {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.8; }
+
+      0%,
+      100% {
+        opacity: 0.4;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
     }
 
     .gold-theme #score {
@@ -1058,26 +1066,119 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(125deg, 
-        rgba(255, 0, 0, 0.12), 
-        rgba(255, 127, 0, 0.12), 
-        rgba(255, 255, 0, 0.12), 
-        rgba(0, 255, 0, 0.12), 
-        rgba(0, 0, 255, 0.12), 
-        rgba(75, 0, 130, 0.12), 
-        rgba(139, 0, 255, 0.12));
+      background: linear-gradient(125deg,
+          rgba(255, 0, 0, 0.12),
+          rgba(255, 127, 0, 0.12),
+          rgba(255, 255, 0, 0.12),
+          rgba(0, 255, 0, 0.12),
+          rgba(0, 0, 255, 0.12),
+          rgba(75, 0, 130, 0.12),
+          rgba(139, 0, 255, 0.12));
       background-size: 400% 400%;
       animation: prismaticMove 10s ease infinite;
       pointer-events: none;
     }
 
     @keyframes prismaticMove {
-      0% { background-position: 0% 50% }
-      50% { background-position: 100% 50% }
-      100% { background-position: 0% 50% }
+      0% {
+        background-position: 0% 50%
+      }
+
+      50% {
+        background-position: 100% 50%
+      }
+
+      100% {
+        background-position: 0% 50%
+      }
     }
 
     .prismatic-theme #score {
       text-shadow: 0 0 30px rgba(255, 255, 255, 0.4), 0 0 10px rgba(255, 255, 255, 0.6) !important;
       color: #fff !important;
+    }
+
+    /* A2HS Prompt Styling */
+    #a2hs-card {
+      max-width: 320px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+    }
+
+    .a2hs-icon {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      color: #00ff88;
+      margin-bottom: 8px;
+    }
+
+    .a2hs-icon svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    #a2hs-card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    #a2hs-card p {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+    }
+
+    .a2hs-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    #install-btn {
+      padding: 14px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #00ff88, #00bd68);
+      color: #000;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    #install-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 255, 136, 0.4);
+    }
+
+    #a2hs-ignore {
+      margin-top: 0;
+      width: 100%;
+    }
+
+    #a2hs-opt-out {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+
+    #a2hs-opt-out:hover {
+      color: rgba(255, 255, 255, 0.6);
     }

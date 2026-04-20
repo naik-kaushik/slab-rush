@@ -146,10 +146,37 @@
         </button>
       </div>
     </div>
+
+    <!-- A2HS Prompt Modal -->
+    <div id="a2hs-modal" class="modal-overlay">
+      <div id="a2hs-card" class="glass">
+        <div class="a2hs-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </div>
+        <h3>Install Slab Rush!</h3>
+        <p>Add to home screen for faster access and a better experience.</p>
+        <div class="a2hs-actions">
+          <button id="install-btn">Install Now</button>
+          <button id="a2hs-ignore" class="secondary-btn">Later</button>
+        </div>
+        <button id="a2hs-opt-out">Don't show me again</button>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
   <script src="js/game.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
 </body>
 
 </html>

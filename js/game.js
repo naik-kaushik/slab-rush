@@ -77,7 +77,10 @@
         ownedSkins: ['classic'],
         ownedUpgrades: [],
         timeMachineCount: 0,
-        multiplierStartCount: 0
+        multiplierStartCount: 0,
+        sessionCount: 0,
+        lastVisit: 0,
+        a2hsOptOut: false
     };
 
     let gameState = SecureStorage.load();
@@ -113,6 +116,51 @@
         gameState = { ...DEFAULT_STATE };
         cheatDetected = true;
         SecureStorage.save(gameState);
+    }
+
+    // Initialize/Update Session Info
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const isReturningUser = gameState.lastVisit > 0 && (now - gameState.lastVisit) < oneDay;
+
+    gameState.lastVisit = now;
+    // We'll increment sessionCount in startGame to count "plays" as requested by user
+    // However, the user said "if user plays the game more than 5 times".
+    // Let's increment it here for "visits" or in startGame for "plays"?
+    // The prompt says "if user plays the game more than 5 times". So I'll do it in startGame.
+    SecureStorage.save(gameState);
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredPrompt = e;
+
+        // Check if we should show our custom prompt
+        if (shouldShowA2HSPrompt()) {
+            setTimeout(showA2HSPrompt, 2000); // Show after 2 seconds
+        }
+    });
+
+    function shouldShowA2HSPrompt() {
+        if (!deferredPrompt) return false;
+        if (gameState.a2hsOptOut) return false;
+
+        // Show if plays > 5 (meaning 6th play onwards)
+        if (gameState.sessionCount >= 5) {
+            // User said "After that we can show it if the user visits the game back before 24hrs"
+            // This implies the 24h check is for the "recurring" part.
+            // Let's interpret "After that" as "for subsequent visits".
+            // So: 
+            // 1. If sessionCount === 5 (just finished 5th play), show it.
+            // 2. If sessionCount > 5, show it ONLY if returning within 24h.
+
+            if (gameState.sessionCount === 5) return true;
+            if (gameState.sessionCount > 5 && isReturningUser) return true;
+        }
+
+        return false;
     }
 
     let W,
@@ -414,6 +462,15 @@
         multiplierValue = 1;
         multiplierTime = 0;
         consecutivePerfects = 0;
+
+        // Increment session count (plays)
+        gameState.sessionCount = (gameState.sessionCount || 0) + 1;
+        SecureStorage.save(gameState);
+
+        // Check for A2HS prompt on the 5th play (meaning they have played 5 times and are starting the 6th)
+        if (shouldShowA2HSPrompt()) {
+            setTimeout(showA2HSPrompt, 1000);
+        }
 
         // Apply Multiplier Start power-up
         if (gameState.multiplierStartCount > 0) {
@@ -995,4 +1052,38 @@
     });
     window.addEventListener("resize", resize);
     resize();
+
+    // A2HS Interaction Logic
+    function showA2HSPrompt() {
+        const modal = document.getElementById('a2hs-modal');
+        if (modal) modal.classList.add('active');
+    }
+
+    function hideA2HSPrompt() {
+        const modal = document.getElementById('a2hs-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    document.getElementById('install-btn').addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        hideA2HSPrompt();
+        // Show the browser's install prompt
+        deferredPrompt.prompt();
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        // We've used the prompt, and can't use it again, throw it away
+        deferredPrompt = null;
+    });
+
+    document.getElementById('a2hs-ignore').addEventListener('click', () => {
+        hideA2HSPrompt();
+    });
+
+    document.getElementById('a2hs-opt-out').addEventListener('click', () => {
+        gameState.a2hsOptOut = true;
+        SecureStorage.save(gameState);
+        hideA2HSPrompt();
+        showToast("We won't show this again.");
+    });
 })();
