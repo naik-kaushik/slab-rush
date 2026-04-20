@@ -14,7 +14,7 @@
     const SecureStorage = {
         _key: '_sr_data',
         _salt: 'v1_slab_rush_secure',
-        
+
         _hash(str) {
             let h = 0;
             for (let i = 0; i < str.length; i++) {
@@ -76,11 +76,22 @@
         currentSkinId: 'classic',
         ownedSkins: ['classic'],
         ownedUpgrades: [],
-        timeMachineCount: 0
+        timeMachineCount: 0,
+        multiplierStartCount: 0,
+        sessionCount: 0,
+        lastVisit: 0,
+        a2hsOptOut: false
     };
 
     let gameState = SecureStorage.load();
     let cheatDetected = false;
+
+    if (gameState && !gameState.corrupted) {
+        if (gameState.multiplierStartCount === undefined) {
+            gameState.multiplierStartCount = 0;
+            SecureStorage.save(gameState);
+        }
+    }
 
     if (!gameState) {
         // New player or no data
@@ -95,16 +106,61 @@
             gameState.ownedSkins = JSON.parse(localStorage.getItem('slab_rush_owned_skins') || '["classic"]');
             gameState.ownedUpgrades = JSON.parse(localStorage.getItem('slab_rush_owned_upgrades') || '[]');
             gameState.timeMachineCount = parseInt(localStorage.getItem('slab_rush_time_machine_count') || '0');
-            
+
             // Clear legacy keys
-            ['slab_rush_coins', 'slab_rush_gems', 'slab_rush_highscore', 'slab_rush_current_skin', 
-             'slab_rush_owned_skins', 'slab_rush_owned_upgrades', 'slab_rush_time_machine_count'].forEach(k => localStorage.removeItem(k));
+            ['slab_rush_coins', 'slab_rush_gems', 'slab_rush_highscore', 'slab_rush_current_skin',
+                'slab_rush_owned_skins', 'slab_rush_owned_upgrades', 'slab_rush_time_machine_count'].forEach(k => localStorage.removeItem(k));
             SecureStorage.save(gameState);
         }
     } else if (gameState.corrupted) {
         gameState = { ...DEFAULT_STATE };
         cheatDetected = true;
         SecureStorage.save(gameState);
+    }
+
+    // Initialize/Update Session Info
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const isReturningUser = gameState.lastVisit > 0 && (now - gameState.lastVisit) < oneDay;
+
+    gameState.lastVisit = now;
+    // We'll increment sessionCount in startGame to count "plays" as requested by user
+    // However, the user said "if user plays the game more than 5 times".
+    // Let's increment it here for "visits" or in startGame for "plays"?
+    // The prompt says "if user plays the game more than 5 times". So I'll do it in startGame.
+    SecureStorage.save(gameState);
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredPrompt = e;
+
+        // Check if we should show our custom prompt
+        if (shouldShowA2HSPrompt()) {
+            setTimeout(showA2HSPrompt, 2000); // Show after 2 seconds
+        }
+    });
+
+    function shouldShowA2HSPrompt() {
+        if (!deferredPrompt) return false;
+        if (gameState.a2hsOptOut) return false;
+
+        // Show if plays > 5 (meaning 6th play onwards)
+        if (gameState.sessionCount >= 5) {
+            // User said "After that we can show it if the user visits the game back before 24hrs"
+            // This implies the 24h check is for the "recurring" part.
+            // Let's interpret "After that" as "for subsequent visits".
+            // So: 
+            // 1. If sessionCount === 5 (just finished 5th play), show it.
+            // 2. If sessionCount > 5, show it ONLY if returning within 24h.
+
+            if (gameState.sessionCount === 5) return true;
+            if (gameState.sessionCount > 5 && isReturningUser) return true;
+        }
+
+        return false;
     }
 
     let W,
@@ -166,6 +222,21 @@
             bg: "radial-gradient(circle at 50% 0, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) 15%, transparent 16%), radial-gradient(circle at 50% 100%, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) 15%, transparent 16%), radial-gradient(circle at 0 50%, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) 15%, transparent 16%), radial-gradient(circle at 100% 50%, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) 15%, transparent 16%)",
             bgSize: "60px 60px",
             background: "#0c4a6e"
+        },
+        {
+            id: 'phantom', name: 'Phantom Void', price: 5000,
+            colors: ["#111", "#000", "#111", "#050505"],
+            themeClass: 'phantom-theme'
+        },
+        {
+            id: 'gold_glimmer', name: 'Golden Glimmer', price: 15000,
+            colors: ["#ffd700", "#ffcc33", "#e6b800", "#ffcc33"],
+            themeClass: 'gold-theme'
+        },
+        {
+            id: 'prismatic', name: 'Prismatic Flow', price: 50000,
+            colors: ["#ff0000", "#ff7f00", "#ffff00", "#00ff00", "#0000ff", "#4b0082", "#8b00ff"],
+            themeClass: 'prismatic-theme'
         }
     ];
 
@@ -185,8 +256,9 @@
             name: 'Speed Stabilizer',
             type: 'gem',
             levels: [
-                { id: 'speed_stab_1', price: 150, effect: 0.8, label: 'LVL 1 (-20%)' },
-                { id: 'speed_stab_2', price: 300, effect: 0.6, label: 'LVL 2 (-40%)' }
+                { id: 'speed_stab_1', price: 150, effect: 0.85, label: 'LVL 1 (-15%)' },
+                { id: 'speed_stab_2', price: 300, effect: 0.70, label: 'LVL 2 (-30%)' },
+                { id: 'speed_stab_3', price: 600, effect: 0.60, label: 'LVL 3 (-40%)' }
             ]
         },
         {
@@ -196,6 +268,22 @@
             price: 50,
             consumable: true,
             description: 'Rewind 3 blocks after failure'
+        },
+        {
+            id: 'multiplier_start',
+            name: 'Multiplier Start',
+            type: 'coin',
+            price: 500,
+            consumable: true,
+            description: 'Start next game with 2x Multiplier (10s)'
+        },
+        {
+            id: 'gem_exchange',
+            name: 'Gem Exchange',
+            type: 'coin',
+            price: 10000,
+            consumable: true,
+            description: 'Buy 25 Gems with Coins'
         }
     ];
 
@@ -247,6 +335,7 @@
     }
 
     function getSpeedStabilizerLevel() {
+        if (gameState.ownedUpgrades.includes('speed_stab_3')) return 3;
         if (gameState.ownedUpgrades.includes('speed_stab_2')) return 2;
         if (gameState.ownedUpgrades.includes('speed_stab_1')) return 1;
         return 0;
@@ -368,13 +457,37 @@
         sessionGems = 0;
         lastSpeedScale = 0;
         scoreEl.textContent = "0";
-        spd = 3;
+
+        const baseStartSpd = 1.8 * (W / 800);
+        const stabLevel = getSpeedStabilizerLevel();
+        const stabEffect = stabLevel > 0 ? UPGRADES[1].levels[stabLevel - 1].effect : 1.0;
+        // Apply Global Speed Multiplier with Safety Floor (min 60% of base speed)
+        spd = Math.max(baseStartSpd * stabEffect, baseStartSpd * 0.6);
+
         stack = [];
         dir = 1;
         updateRewardDisplay();
-        multiplierTime = 0;
         multiplierValue = 1;
+        multiplierTime = 0;
         consecutivePerfects = 0;
+
+        // Increment session count (plays)
+        gameState.sessionCount = (gameState.sessionCount || 0) + 1;
+        SecureStorage.save(gameState);
+
+        // Check for A2HS prompt on the 5th play (meaning they have played 5 times and are starting the 6th)
+        if (shouldShowA2HSPrompt()) {
+            setTimeout(showA2HSPrompt, 1000);
+        }
+
+        // Apply Multiplier Start power-up
+        if (gameState.multiplierStartCount > 0) {
+            gameState.multiplierStartCount--;
+            multiplierTime = 10;
+            multiplierValue = 2;
+            SecureStorage.save(gameState);
+        }
+
         lastLoopTime = performance.now();
         hasUsedRevive = false;
         hasCelebratedPB = false;
@@ -450,7 +563,7 @@
         stack.push(trimmed);
         score++;
         scoreEl.textContent = score;
-        
+
         // Celebration for Personal Best!
         if (gameState.highScore > 0 && score > gameState.highScore && !hasCelebratedPB) {
             hasCelebratedPB = true;
@@ -464,23 +577,25 @@
                 });
             }
         }
-        
+
         playChime();
 
-        // Speed scaling with Stabilizer
+        // Speed scaling with Global Stabilizer
         const stabLevel = getSpeedStabilizerLevel();
         const stabEffect = stabLevel > 0 ? UPGRADES[1].levels[stabLevel - 1].effect : 1.0;
-        const currentScale = Math.floor(score / (10 / stabEffect));
+        const speedFactor = W / 800; // Reference width for 1x speed
+        const currentScale = Math.floor(score / 10); // Back to fixed 10-block intervals
 
         if (currentScale > lastSpeedScale) {
             if (soundEnabled) swooshSound.play().catch(() => { });
             lastSpeedScale = currentScale;
+            // Apply modifier to the increment as well
+            spd += (0.25 * speedFactor) * stabEffect;
         }
-        spd += 0.5 * currentScale;
-        spd = Math.min(spd, 16);
+        spd = Math.min(spd, 12 * speedFactor);
 
         // Reward system with Booster
-        let gain = 1 * (score / 5);
+        let gain = 1 + Math.floor(score / 25);
         if (multiplierTime > 0) {
             gain *= multiplierValue;
         }
@@ -508,7 +623,7 @@
         running = false;
         cancelAnimationFrame(raf);
 
-        sessionGems = Math.floor(score / 10);
+        sessionGems = Math.floor(score / 10) + Math.floor(score / 25) + Math.floor(score / 50);
         gameState.totalGems += sessionGems;
 
         if (soundEnabled) gameOverSound.play().catch(() => { });
@@ -518,7 +633,7 @@
             gameState.highScore = score;
             isNewBest = true;
         }
-        
+
         // Save state at end of game
         SecureStorage.save(gameState);
 
@@ -619,11 +734,11 @@
             document.getElementById("share-btn").addEventListener("click", async () => {
                 const btn = document.getElementById("share-btn");
                 btn.disabled = true;
-                
+
                 try {
                     const text = `🏗️ SLAB RUSH! 🏗️\nI just stacked a massive tower of ${score} blocks! 🚀✨\n\nCan you beat my record? Try it at https://naik-kaushik.github.io/slab-rush/ 🏆\n#SlabRush #Gaming #Highscore`;
                     const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
-                    
+
                     showToast("Opening X...");
                     window.open(tweetUrl, '_blank');
                     btn.disabled = false;
@@ -636,7 +751,7 @@
 
             document.getElementById("native-share-btn").addEventListener("click", async () => {
                 const text = `🏗️ SLAB RUSH! 🏗️\nI just stacked a massive tower of ${score} blocks! 🚀✨\n\nCan you beat my record? Try it at https://naik-kaushik.github.io/slab-rush/ 🏆\n#SlabRush #Gaming #Highscore`;
-                
+
                 if (navigator.share) {
                     try {
                         await navigator.share({
@@ -660,6 +775,12 @@
         }
         const supportLink = document.querySelector(".support-msg a");
         if (supportLink) {
+            supportLink.style.pointerEvents = "none";
+            supportLink.style.opacity = "0.5";
+            setTimeout(() => {
+                supportLink.style.pointerEvents = "auto";
+                supportLink.style.opacity = "1";
+            }, 1500);
             supportLink.addEventListener("click", (e) => {
                 e.preventDefault();
                 document.getElementById("kofi-modal").style.display = "flex";
@@ -702,9 +823,9 @@
     const fullscreenBtn = document.getElementById("fullscreen-btn");
     fullscreenBtn.addEventListener("click", () => {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {});
+            document.documentElement.requestFullscreen().catch(() => { });
         } else {
-            document.exitFullscreen().catch(() => {});
+            document.exitFullscreen().catch(() => { });
         }
     });
     document.addEventListener("fullscreenchange", () => {
@@ -743,7 +864,10 @@
 
     function getUpgradeState(u) {
         if (u.consumable) {
-            return { count: gameState.timeMachineCount, nextPrice: u.price, canBuy: true };
+            let count = 0;
+            if (u.id === 'time_machine') count = gameState.timeMachineCount;
+            if (u.id === 'multiplier_start') count = gameState.multiplierStartCount;
+            return { count, nextPrice: u.price, canBuy: true };
         }
         const level = (u.id === 'coin_boost') ? getCurrentBoosterLevel() : getSpeedStabilizerLevel();
         const next = u.levels[level];
@@ -779,15 +903,25 @@
 
         upgradesGrid.innerHTML = UPGRADES.map(u => {
             const state = getUpgradeState(u);
+            const isGemPrice = u.type !== 'coin';
+            const priceIcon = isGemPrice ?
+                `<svg class="price-icon" viewBox="0 0 24 24" fill="#00ff88"><path d="M6 3L2 9l10 12L22 9l-4-6H6z"></path></svg>` :
+                `<svg class="price-icon" viewBox="0 0 24 24" fill="#ffd700"><circle cx="12" cy="12" r="9"></circle></svg>`;
+
             let actionHtml = '';
             if (u.consumable) {
-                actionHtml = `<span class="item-price gem-price">${u.price} <svg class="price-icon" viewBox="0 0 24 24" fill="#00ff88"><path d="M6 3L2 9l10 12L22 9l-4-6H6z"></path></svg></span>
-                              <div class="equipped-badge">Owned: ${state.count}</div>
-                              <div style="font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px;">${u.description}</div>`;
+                if (u.id === 'gem_exchange') {
+                    actionHtml = `<span class="item-price coin-price">${u.price} ${priceIcon}</span>
+                                  <div style="font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px;">Get 25 Gems</div>`;
+                } else {
+                    actionHtml = `<span class="item-price ${isGemPrice ? 'gem-price' : 'coin-price'}">${u.price} ${priceIcon}</span>
+                                  <div class="equipped-badge">Owned: ${state.count}</div>
+                                  <div style="font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px;">${u.description}</div>`;
+                }
             } else if (state.isMax) {
                 actionHtml = `<span class="equipped-badge">MAX LEVEL</span>`;
             } else {
-                actionHtml = `<span class="item-price gem-price">${state.next.price} <svg class="price-icon" viewBox="0 0 24 24" fill="#00ff88"><path d="M6 3L2 9l10 12L22 9l-4-6H6z"></path></svg></span>
+                actionHtml = `<span class="item-price ${isGemPrice ? 'gem-price' : 'coin-price'}">${state.next.price} ${priceIcon}</span>
                               <div style="font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px;">Next: ${state.next.label}</div>`;
             }
             return `
@@ -840,7 +974,11 @@
         }
 
         // Theme Classes
-        gw.classList.remove('noir-active', 'carbon-theme');
+        SKINS.forEach(s => {
+            if (s.themeClass) gw.classList.remove(s.themeClass);
+        });
+        gw.classList.remove('noir-active');
+
         if (gameState.currentSkinId === 'monochrome') {
             gw.classList.add('noir-active');
         } else if (skin.themeClass) {
@@ -855,16 +993,31 @@
         if (!u.consumable && state.isMax) return;
 
         const cost = u.consumable ? u.price : state.next.price;
-        if (gameState.totalGems >= cost) {
-            gameState.totalGems -= cost;
+        const isCoin = u.type === 'coin';
+        const balance = isCoin ? gameState.totalCoins : gameState.totalGems;
+
+        if (balance >= cost) {
+            if (isCoin) {
+                gameState.totalCoins -= cost;
+            } else {
+                gameState.totalGems -= cost;
+            }
+
             if (u.consumable) {
-                gameState.timeMachineCount++;
+                if (u.id === 'time_machine') gameState.timeMachineCount++;
+                if (u.id === 'multiplier_start') gameState.multiplierStartCount++;
+                if (u.id === 'gem_exchange') {
+                    gameState.totalGems += 25;
+                    showToast("Exchanged 10k Coins for 25 Gems! ✨");
+                }
             } else {
                 gameState.ownedUpgrades.push(state.next.id);
             }
             SecureStorage.save(gameState);
             updateRewardDisplay();
             renderShop();
+        } else {
+            showToast(`Not enough ${isCoin ? 'Coins' : 'Gems'}!`);
         }
     };
 
@@ -908,4 +1061,38 @@
     });
     window.addEventListener("resize", resize);
     resize();
+
+    // A2HS Interaction Logic
+    function showA2HSPrompt() {
+        const modal = document.getElementById('a2hs-modal');
+        if (modal) modal.classList.add('active');
+    }
+
+    function hideA2HSPrompt() {
+        const modal = document.getElementById('a2hs-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    document.getElementById('install-btn').addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        hideA2HSPrompt();
+        // Show the browser's install prompt
+        deferredPrompt.prompt();
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        // We've used the prompt, and can't use it again, throw it away
+        deferredPrompt = null;
+    });
+
+    document.getElementById('a2hs-ignore').addEventListener('click', () => {
+        hideA2HSPrompt();
+    });
+
+    document.getElementById('a2hs-opt-out').addEventListener('click', () => {
+        gameState.a2hsOptOut = true;
+        SecureStorage.save(gameState);
+        hideA2HSPrompt();
+        showToast("We won't show this again.");
+    });
 })();
