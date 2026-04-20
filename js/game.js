@@ -118,6 +118,7 @@
         SecureStorage.save(gameState);
     }
 
+
     // Initialize/Update Session Info
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
@@ -225,7 +226,7 @@
         },
         {
             id: 'phantom', name: 'Phantom Void', price: 5000,
-            colors: ["#111", "#000", "#111", "#050505"],
+            colors: ["#2d005e", "#0a001a", "#2d005e", "#05000a"],
             themeClass: 'phantom-theme'
         },
         {
@@ -341,14 +342,85 @@
         return 0;
     }
 
-    const chime = new Audio("assets/audio/chime_sound.mp3");
-    const gameOverSound = new Audio("assets/audio/game_over.mp3");
-    const swooshSound = new Audio("assets/audio/swoosh.mp3");
-    const pbSound = new Audio("assets/audio/personal-best.mp3");
-    chime.volume = 0.5;
-    gameOverSound.volume = 0.5;
-    swooshSound.volume = 0.5;
-    pbSound.volume = 0.6;
+    let chime, gameOverSound, swooshSound, pbSound;
+
+    async function initAssets() {
+        const audioAssets = [
+            { id: "chime", src: "assets/audio/chime_sound.mp3" },
+            { id: "gameOver", src: "assets/audio/game_over.mp3" },
+            { id: "swoosh", src: "assets/audio/swoosh.mp3" },
+            { id: "pb", src: "assets/audio/personal-best.mp3" }
+        ];
+
+        const total = audioAssets.length + 1; // +1 for logo
+        let loaded = 0;
+
+        const statusMessages = [
+            "Aligning the stars...",
+            "Harmonizing the void...",
+            "Sculpting the slabs...",
+            "Tuning the frequencies...",
+            "Polishing the galaxies...",
+            "Stabilizing reality..."
+        ];
+
+        const updateProgress = () => {
+            loaded++;
+            const pct = Math.floor((loaded / total) * 100);
+            document.getElementById("progress-fill").style.width = pct + "%";
+            document.getElementById("progress-text").textContent = pct + "%";
+            
+            // Creative status update
+            const statusIndex = Math.min(Math.floor((loaded / total) * statusMessages.length), statusMessages.length - 1);
+            document.querySelector(".loader-status").textContent = statusMessages[statusIndex];
+
+            if (pct >= 100) {
+                setTimeout(() => {
+                    document.getElementById("loading-screen").classList.add("hidden");
+                }, 500);
+            }
+        };
+
+        // Load Audio
+        const loadAudio = (asset) => new Promise((resolve) => {
+            const audio = new Audio(asset.src);
+            audio.addEventListener("canplaythrough", () => {
+                updateProgress();
+                resolve(audio);
+            }, { once: true });
+            audio.load();
+        });
+
+        // Load Logo Image
+        const loadImage = (src) => new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                updateProgress();
+                resolve(img);
+            };
+            img.src = src;
+        });
+
+        const [a1, a2, a3, a4] = await Promise.all([
+            loadAudio(audioAssets[0]),
+            loadAudio(audioAssets[1]),
+            loadAudio(audioAssets[2]),
+            loadAudio(audioAssets[3]),
+            loadImage("assets/images/game_logo.png")
+        ]);
+
+        chime = a1;
+        gameOverSound = a2;
+        swooshSound = a3;
+        pbSound = a4;
+
+        chime.volume = 0.5;
+        gameOverSound.volume = 0.5;
+        swooshSound.volume = 0.5;
+        pbSound.volume = 0.6;
+    }
+
+    initAssets();
 
     const ICON_ON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
     const ICON_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
@@ -458,7 +530,7 @@
         lastSpeedScale = 0;
         scoreEl.textContent = "0";
 
-        const baseStartSpd = 1.8 * (W / 800);
+        const baseStartSpd = 2.4 * ((W + 800) / 1600);
         const stabLevel = getSpeedStabilizerLevel();
         const stabEffect = stabLevel > 0 ? UPGRADES[1].levels[stabLevel - 1].effect : 1.0;
         // Apply Global Speed Multiplier with Safety Floor (min 60% of base speed)
@@ -583,7 +655,7 @@
         // Speed scaling with Global Stabilizer
         const stabLevel = getSpeedStabilizerLevel();
         const stabEffect = stabLevel > 0 ? UPGRADES[1].levels[stabLevel - 1].effect : 1.0;
-        const speedFactor = W / 800; // Reference width for 1x speed
+        const speedFactor = (W + 800) / 1600; // Normalized width factor
         const currentScale = Math.floor(score / 10); // Back to fixed 10-block intervals
 
         if (currentScale > lastSpeedScale) {
@@ -623,7 +695,8 @@
         running = false;
         cancelAnimationFrame(raf);
 
-        sessionGems = Math.floor(score / 10) + Math.floor(score / 25) + Math.floor(score / 50);
+        const n = Math.floor(score / 10);
+        sessionGems = (n * (n + 1)) / 2;
         gameState.totalGems += sessionGems;
 
         if (soundEnabled) gameOverSound.play().catch(() => { });
