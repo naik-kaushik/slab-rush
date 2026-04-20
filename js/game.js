@@ -256,8 +256,9 @@
             name: 'Speed Stabilizer',
             type: 'gem',
             levels: [
-                { id: 'speed_stab_1', price: 150, effect: 0.8, label: 'LVL 1 (-20%)' },
-                { id: 'speed_stab_2', price: 300, effect: 0.6, label: 'LVL 2 (-40%)' }
+                { id: 'speed_stab_1', price: 150, effect: 0.85, label: 'LVL 1 (-15%)' },
+                { id: 'speed_stab_2', price: 300, effect: 0.70, label: 'LVL 2 (-30%)' },
+                { id: 'speed_stab_3', price: 600, effect: 0.60, label: 'LVL 3 (-40%)' }
             ]
         },
         {
@@ -334,6 +335,7 @@
     }
 
     function getSpeedStabilizerLevel() {
+        if (gameState.ownedUpgrades.includes('speed_stab_3')) return 3;
         if (gameState.ownedUpgrades.includes('speed_stab_2')) return 2;
         if (gameState.ownedUpgrades.includes('speed_stab_1')) return 1;
         return 0;
@@ -455,7 +457,13 @@
         sessionGems = 0;
         lastSpeedScale = 0;
         scoreEl.textContent = "0";
-        spd = 1.8 * (W / 800);
+
+        const baseStartSpd = 1.8 * (W / 800);
+        const stabLevel = getSpeedStabilizerLevel();
+        const stabEffect = stabLevel > 0 ? UPGRADES[1].levels[stabLevel - 1].effect : 1.0;
+        // Apply Global Speed Multiplier with Safety Floor (min 60% of base speed)
+        spd = Math.max(baseStartSpd * stabEffect, baseStartSpd * 0.6);
+
         stack = [];
         dir = 1;
         updateRewardDisplay();
@@ -572,16 +580,17 @@
 
         playChime();
 
-        // Speed scaling with Stabilizer
+        // Speed scaling with Global Stabilizer
         const stabLevel = getSpeedStabilizerLevel();
         const stabEffect = stabLevel > 0 ? UPGRADES[1].levels[stabLevel - 1].effect : 1.0;
         const speedFactor = W / 800; // Reference width for 1x speed
-        const currentScale = Math.floor(score / (10 / stabEffect));
+        const currentScale = Math.floor(score / 10); // Back to fixed 10-block intervals
 
         if (currentScale > lastSpeedScale) {
             if (soundEnabled) swooshSound.play().catch(() => { });
             lastSpeedScale = currentScale;
-            spd += (0.25 * speedFactor);
+            // Apply modifier to the increment as well
+            spd += (0.25 * speedFactor) * stabEffect;
         }
         spd = Math.min(spd, 12 * speedFactor);
 
