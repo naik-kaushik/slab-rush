@@ -33,6 +33,7 @@ A sleek, minimalist stacking game built with HTML5 Canvas and Vanilla JavaScript
 3. **Swoosh Sound Effect** by [Universfield](https://pixabay.com/users/universfield-28281460/) from [Pixabay](https://pixabay.com/)
 4. **Personal Best Sound Effect** by [Universfield](https://pixabay.com/users/universfield-28281460/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=402152) from [Pixabay](https://pixabay.com/sound-effects//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=402152)
 5. **CSS Background Patterns** by [MagicPattern](https://www.magicpattern.design/tools/css-backgrounds)
+6. **Physics Engine (Matter.js)** by [liabru](https://github.com/liabru/matter-js)
 
 ## Support
 
