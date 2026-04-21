@@ -9,7 +9,9 @@
         multiplierContainer = document.getElementById("multiplier-container"),
         multiplierBadge = document.getElementById("multiplier-badge"),
         multiplierTimeEl = document.getElementById("multiplier-time"),
-        kofiBtn = document.getElementById("kofi-btn");
+        settingsBtn = document.getElementById("settings-btn"),
+        settingsModal = document.getElementById("settings-modal"),
+        closeSettingsBtn = document.getElementById("close-settings");
 
     const SecureStorage = {
         _key: '_sr_data',
@@ -426,7 +428,19 @@
     const ICON_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
 
     function updateSoundIcon() {
-        document.getElementById("sound-btn").innerHTML = soundEnabled ? ICON_ON : ICON_OFF;
+        const soundBtn = document.getElementById("sound-btn");
+        if (soundBtn) soundBtn.innerHTML = soundEnabled ? ICON_ON : ICON_OFF;
+    }
+
+    function openSettings() {
+        document.getElementById("stats-total-coins").textContent = Math.floor(gameState.totalCoins);
+        document.getElementById("stats-total-gems").textContent = Math.floor(gameState.totalGems);
+        document.getElementById("stats-highscore").textContent = gameState.highScore;
+        settingsModal.classList.add("active");
+    }
+
+    function closeSettings() {
+        settingsModal.classList.remove("active");
     }
 
     function showToast(msg) {
@@ -521,7 +535,6 @@
 
     function startGame() {
         overlay.style.display = "none";
-        if (kofiBtn) kofiBtn.style.display = "none";
         document.getElementById("coin-counter").style.display = "flex";
         document.getElementById("gem-counter").style.display = "flex";
         score = 0;
@@ -783,7 +796,6 @@
             </div>
           `;
         overlay.style.display = "flex";
-        if (kofiBtn) kofiBtn.style.display = "flex";
         if (isSmallScreen) {
             document.getElementById("coin-counter").style.display = "none";
             document.getElementById("gem-counter").style.display = "none";
@@ -877,7 +889,6 @@
         scoreEl.textContent = score;
 
         overlay.style.display = "none";
-        if (kofiBtn) kofiBtn.style.display = "none";
         document.getElementById("coin-counter").style.display = "flex";
         document.getElementById("gem-counter").style.display = "flex";
         running = true;
@@ -907,6 +918,10 @@
     const kofiModal = document.getElementById("kofi-modal");
     const closeKofiBtn = document.getElementById("close-kofi");
 
+    settingsBtn.addEventListener("click", openSettings);
+    closeSettingsBtn.addEventListener("click", closeSettings);
+
+    const kofiBtn = document.getElementById("kofi-btn");
     if (kofiBtn) {
         kofiBtn.addEventListener("click", () => {
             kofiModal.style.display = "flex";
