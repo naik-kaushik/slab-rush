@@ -6,14 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Slab Rush! - A minimalist stacking game. How high can you go?" />
   <title>Slab Rush!</title>
-  <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico" />
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png" />
+  <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico?v=1.7.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png?v=1.7.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png?v=1.7.0" />
   <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png" />
-  <link rel="manifest" href="assets/favicon/site.webmanifest" />
+  <link rel="manifest" href="assets/favicon/site.webmanifest?v=1.7.0" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/carbon.css" />
+  <link rel="stylesheet" href="css/style.css?v=1.7.0" />
+  <link rel="stylesheet" href="css/carbon.css?v=1.7.0" />
   <script type="text/javascript">
     (function (c, l, a, r, i, t, y) {
       c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
@@ -179,14 +179,23 @@
         <button id="a2hs-opt-out">Don't show me again</button>
       </div>
     </div>
+    <div id="version-tag">v1.7.0</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
-  <script src="js/game.js"></script>
+  <script src="js/game.js?v=1.7.0"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
+        
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            window.location.reload();
+            refreshing = true;
+          }
+        });
       });
     }
   </script>
