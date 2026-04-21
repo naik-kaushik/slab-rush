@@ -6,14 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Slab Rush! - A minimalist stacking game. How high can you go?" />
   <title>Slab Rush!</title>
-  <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico?v=1.7.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png?v=1.7.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png?v=1.7.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png" />
-  <link rel="manifest" href="assets/favicon/site.webmanifest?v=1.7.0" />
+  <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico?v=1.8.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png?v=1.8.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png?v=1.8.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=1.8.0" />
+  <link rel="manifest" href="assets/favicon/site.webmanifest?v=1.8.0" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=1.7.0" />
-  <link rel="stylesheet" href="css/carbon.css?v=1.7.0" />
+  <link rel="stylesheet" href="css/style.css?v=1.8.0" />
+  <link rel="stylesheet" href="css/carbon.css?v=1.8.0" />
   <script type="text/javascript">
     (function (c, l, a, r, i, t, y) {
       c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
@@ -26,7 +26,7 @@
 <body>
   <div id="loading-screen">
     <div class="loader-content">
-      <img src="assets/images/game_logo.png" alt="Slab Rush!" class="loader-logo">
+      <img src="assets/images/game_logo.png?v=1.8.0" alt="Slab Rush!" class="loader-logo">
       <div class="progress-wrapper">
         <div class="progress-bar">
           <div id="progress-fill"></div>
@@ -64,25 +64,75 @@
       <span class="desktop-hint">tap · click · space</span>
     </div>
     <div id="perfect">Perfect</div>
-    <button id="sound-btn" aria-label="Toggle Sound"></button>
-    <button id="kofi-btn" aria-label="Support on Ko-fi">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-        stroke-linejoin="round">
-        <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-        <line x1="6" y1="1" x2="6" y2="4"></line>
-        <line x1="10" y1="1" x2="10" y2="4"></line>
-        <line x1="14" y1="1" x2="14" y2="4"></line>
-      </svg>
-    </button>
-    <button id="fullscreen-btn" aria-label="Toggle Fullscreen">
+    <button id="settings-btn" aria-label="Open Settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
       </svg>
     </button>
+    <div id="settings-modal" class="modal-overlay">
+      <div id="settings-card" class="glass">
+        <div class="shop-header">
+          <h3>Settings</h3>
+          <button id="close-settings" aria-label="Close Settings">&times;</button>
+        </div>
+        <div class="stats-container">
+          <div class="stat-item">
+            <span class="stat-label">Lifetime Coins</span>
+            <div class="stat-value-row">
+              <svg class="coin-icon" viewBox="0 0 24 24" fill="#ffd700" stroke="#b8860b" stroke-width="1.5">
+                <circle cx="12" cy="12" r="9"></circle>
+                <text x="50%" y="54%" text-anchor="middle" font-size="10" dy=".3em" fill="#b8860b" font-weight="bold">$</text>
+              </svg>
+              <span id="stats-total-coins">0</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Gems Earned</span>
+            <div class="stat-value-row">
+              <svg class="gem-icon" viewBox="0 0 24 24" fill="#00ff88" stroke="#008844" stroke-width="1.5">
+                <path d="M6 3L2 9l10 12L22 9l-4-6H6z"></path>
+                <path d="M2 9h20M6 3l4 6m8-6l-4 6m-6 0l4 12m4-12l-4 12"></path>
+              </svg>
+              <span id="stats-total-gems">0</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Personal Best</span>
+            <div class="stat-value-row">
+              <svg class="pb-icon" viewBox="0 0 24 24" fill="#ffd700" stroke="#b8860b" stroke-width="1.5">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"></path>
+              </svg>
+              <span id="stats-highscore">0</span>
+            </div>
+          </div>
+        </div>
+        <div class="settings-controls">
+          <button id="sound-btn" class="settings-control-btn" aria-label="Toggle Sound"></button>
+          <button id="haptic-btn" class="settings-control-btn" aria-label="Toggle Haptics"></button>
+          <button id="fullscreen-btn" class="settings-control-btn" aria-label="Toggle Fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+          </button>
+        </div>
+        <button id="kofi-btn" class="secondary-btn" style="width: 100%; margin-top: 10px;">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+            <line x1="6" y1="1" x2="6" y2="4"></line>
+            <line x1="10" y1="1" x2="10" y2="4"></line>
+            <line x1="14" y1="1" x2="14" y2="4"></line>
+          </svg>
+          Support on Ko-fi
+        </button>
+      </div>
+    </div>
+
     <div id="overlay">
       <div id="card" class="glass">
-        <img id="logo" src="assets/images/game_logo.png" alt="Slab Rush! Logo" />
+        <img id="logo" src="assets/images/game_logo.png?v=1.8.0" alt="Slab Rush! Logo" />
         <h2>Slab Rush!</h2>
         <div class="tagline">How high can you go?</div>
         <div id="pb-display" style="display: none;">
@@ -179,11 +229,12 @@
         <button id="a2hs-opt-out">Don't show me again</button>
       </div>
     </div>
-    <div id="version-tag">v1.7.0</div>
+    <div id="version-tag">v1.8.0</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
-  <script src="js/game.js?v=1.7.0"></script>
+  <script src="js/matter.js?v=1.8.0"></script>
+  <script src="js/game.js?v=1.8.0"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

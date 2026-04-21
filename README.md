@@ -25,6 +25,27 @@ A sleek, minimalist stacking game built with HTML5 Canvas and Vanilla JavaScript
    - Go to repository **Settings** -> **Pages**.
    - Select the `main` branch and `/root` folder.
    - Click **Save**.
+   
+
+## Deployment & Versioning (Manual)
+
+When pushing a new update, you must increment the version string across several files to ensure the Service Worker (PWA) triggers a refresh and bypasses stale browser caches.
+
+### Steps to Update Version (e.g., to 1.9.0):
+
+1.  **`sw.js`**:
+    *   Update `CACHE_NAME` to `'slab-rush-1.9.0'`.
+    *   Update all URLs in the `ASSETS` array to use `?v=1.9.0`.
+2.  **`index.html`**:
+    *   Update the version text in `<div id="version-tag">v1.9.0</div>`.
+    *   Update all `?v=1.8.0` occurrences in `<link>` and `<script>` tags to `?v=1.9.0`.
+    *   Update the logo `<img>` sources to use `?v=1.9.0`.
+3.  **`js/game.js`**:
+    *   Update the `src` paths in the `audioAssets` array inside `initAssets()`.
+    *   Update the `loadImage` path for the game logo.
+
+This process ensures that when the Service Worker activates, it fetches fresh copies of all game assets and forces a page reload for the user.
+
 
 ## Attributions
 
@@ -33,6 +54,7 @@ A sleek, minimalist stacking game built with HTML5 Canvas and Vanilla JavaScript
 3. **Swoosh Sound Effect** by [Universfield](https://pixabay.com/users/universfield-28281460/) from [Pixabay](https://pixabay.com/)
 4. **Personal Best Sound Effect** by [Universfield](https://pixabay.com/users/universfield-28281460/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=402152) from [Pixabay](https://pixabay.com/sound-effects//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=402152)
 5. **CSS Background Patterns** by [MagicPattern](https://www.magicpattern.design/tools/css-backgrounds)
+6. **Physics Engine (Matter.js)** by [liabru](https://github.com/liabru/matter-js)
 
 ## Support
 

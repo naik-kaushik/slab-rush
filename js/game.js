@@ -9,7 +9,9 @@
         multiplierContainer = document.getElementById("multiplier-container"),
         multiplierBadge = document.getElementById("multiplier-badge"),
         multiplierTimeEl = document.getElementById("multiplier-time"),
-        kofiBtn = document.getElementById("kofi-btn");
+        settingsBtn = document.getElementById("settings-btn"),
+        settingsModal = document.getElementById("settings-modal"),
+        closeSettingsBtn = document.getElementById("close-settings");
 
     const SecureStorage = {
         _key: '_sr_data',
@@ -80,7 +82,8 @@
         multiplierStartCount: 0,
         sessionCount: 0,
         lastVisit: 0,
-        a2hsOptOut: false
+        a2hsOptOut: false,
+        hapticsEnabled: true
     };
 
     let gameState = SecureStorage.load();
@@ -129,6 +132,10 @@
     // However, the user said "if user plays the game more than 5 times".
     // Let's increment it here for "visits" or in startGame for "plays"?
     // The prompt says "if user plays the game more than 5 times". So I'll do it in startGame.
+    // - [x] Update `scrollUp()` to shift debris but keep floor static
+    // - [x] Implement debris collection limit (max 40)
+    // - [x] Update `loop()` debris rendering to handle piled bodies
+    // - [/] Verify floor collection and scrolling in the browser
     SecureStorage.save(gameState);
 
     let deferredPrompt;
@@ -182,7 +189,13 @@
         multiplierValue = 1,
         consecutivePerfects = 0,
         hasCelebratedPB = false,
-        lastLoopTime = 0;
+        hapticsEnabled = (gameState && gameState.hapticsEnabled !== undefined) ? gameState.hapticsEnabled : true,
+        lastLoopTime = 0,
+        // Matter.js Integration
+        engine = Matter.Engine.create(),
+        world = engine.world,
+        debris = [],
+        floorBody = null;
 
     const SKINS = [
         { id: 'classic', name: 'Classic Teal', colors: ["#5ecfbe", "#4bbdac", "#3aab9a", "#2b9888", "#1d8576", "#117165", "#085e54"], price: 0 },
@@ -346,10 +359,10 @@
 
     async function initAssets() {
         const audioAssets = [
-            { id: "chime", src: "assets/audio/chime_sound.mp3" },
-            { id: "gameOver", src: "assets/audio/game_over.mp3" },
-            { id: "swoosh", src: "assets/audio/swoosh.mp3" },
-            { id: "pb", src: "assets/audio/personal-best.mp3" }
+            { id: "chime", src: "assets/audio/chime_sound.mp3?v=1.8.0" },
+            { id: "gameOver", src: "assets/audio/game_over.mp3?v=1.8.0" },
+            { id: "swoosh", src: "assets/audio/swoosh.mp3?v=1.8.0" },
+            { id: "pb", src: "assets/audio/personal-best.mp3?v=1.8.0" }
         ];
 
         const total = audioAssets.length + 1; // +1 for logo
@@ -406,7 +419,7 @@
             loadAudio(audioAssets[1]),
             loadAudio(audioAssets[2]),
             loadAudio(audioAssets[3]),
-            loadImage("assets/images/game_logo.png")
+            loadImage("assets/images/game_logo.png?v=1.8.0")
         ]);
 
         chime = a1;
@@ -424,9 +437,36 @@
 
     const ICON_ON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
     const ICON_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+    const VIB_ON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path><path d="M12 18h.01"></path><path d="M2 8l2 2-2 2"></path><path d="M22 8l-2 2 2 2"></path></svg>`;
+    const VIB_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path><path d="M12 18h.01"></path><line x1="23" y1="1" x2="1" y2="23"></line></svg>`;
 
     function updateSoundIcon() {
-        document.getElementById("sound-btn").innerHTML = soundEnabled ? ICON_ON : ICON_OFF;
+        const soundBtn = document.getElementById("sound-btn");
+        if (soundBtn) soundBtn.innerHTML = soundEnabled ? ICON_ON : ICON_OFF;
+    }
+
+    function updateHapticIcon() {
+        const hapticBtn = document.getElementById("haptic-btn");
+        if (hapticBtn) hapticBtn.innerHTML = hapticsEnabled ? VIB_ON : VIB_OFF;
+    }
+
+    function triggerHaptic(ms = 50) {
+        if (hapticsEnabled && window.navigator && window.navigator.vibrate) {
+            window.navigator.vibrate(ms);
+        }
+    }
+
+    function openSettings() {
+        document.getElementById("stats-total-coins").textContent = Math.floor(gameState.totalCoins);
+        document.getElementById("stats-total-gems").textContent = Math.floor(gameState.totalGems);
+        document.getElementById("stats-highscore").textContent = gameState.highScore;
+        updateSoundIcon();
+        updateHapticIcon();
+        settingsModal.classList.add("active");
+    }
+
+    function closeSettings() {
+        settingsModal.classList.remove("active");
     }
 
     function showToast(msg) {
@@ -450,6 +490,14 @@
         H = gw.clientHeight;
         cv.width = W;
         cv.height = H;
+
+        // Update floor position
+        if (floorBody) {
+            Matter.Body.setPosition(floorBody, { x: W / 2, y: H + 25 });
+        } else {
+            floorBody = Matter.Bodies.rectangle(W / 2, H + 25, W * 2, 50, { isStatic: true });
+            Matter.World.add(world, floorBody);
+        }
     }
 
     function col(i) {
@@ -482,7 +530,14 @@
         return `rgba(${r},${g},${b},${alpha})`;
     }
 
-    function drawBlock(x, y, w, h, color) {
+    function drawBlock(x, y, w, h, color, angle = 0) {
+        ctx.save();
+        if (angle !== 0) {
+            ctx.translate(x + w / 2, y + h / 2);
+            ctx.rotate(angle);
+            ctx.translate(-(x + w / 2), -(y + h / 2));
+        }
+
         // Front face
         ctx.beginPath();
         ctx.moveTo(x, y);
@@ -492,6 +547,7 @@
         ctx.closePath();
         ctx.fillStyle = color;
         ctx.fill();
+
         // Right face
         ctx.beginPath();
         ctx.moveTo(x + w, y);
@@ -501,6 +557,7 @@
         ctx.closePath();
         ctx.fillStyle = shade(color, -28);
         ctx.fill();
+
         // Top face
         ctx.beginPath();
         ctx.moveTo(x, y);
@@ -510,6 +567,8 @@
         ctx.closePath();
         ctx.fillStyle = shade(color, 28);
         ctx.fill();
+
+        ctx.restore();
     }
 
     function playChime() {
@@ -521,7 +580,6 @@
 
     function startGame() {
         overlay.style.display = "none";
-        if (kofiBtn) kofiBtn.style.display = "none";
         document.getElementById("coin-counter").style.display = "flex";
         document.getElementById("gem-counter").style.display = "flex";
         score = 0;
@@ -559,6 +617,13 @@
             multiplierValue = 2;
             SecureStorage.save(gameState);
         }
+
+        // Clear physics
+        Matter.World.clear(world);
+        Matter.Engine.clear(engine);
+        debris = [];
+        floorBody = null; // Forces recreation in resize()
+        resize();
 
         lastLoopTime = performance.now();
         hasUsedRevive = false;
@@ -608,6 +673,7 @@
             mov.x = t.x;
             mov.w = t.w;
             showPerfect();
+            triggerHaptic(50);
 
             if (multiplierTime <= 0) {
                 multiplierTime = 5;
@@ -624,6 +690,31 @@
             multiplierBadge.classList.add("multiplier-bump");
         } else {
             consecutivePerfects = 0;
+            // Create residue debris
+            const isLeft = mov.x < t.x;
+            const residueW = isLeft ? t.x - mov.x : (mov.x + mov.w) - (t.x + t.w);
+            const residueX = isLeft ? mov.x : t.x + t.w;
+
+            if (residueW > 0) {
+                const body = Matter.Bodies.rectangle(
+                    residueX + residueW / 2,
+                    mov.y + BLOCK_H / 2,
+                    residueW,
+                    BLOCK_H,
+                    { friction: 0.3, restitution: 0.2 }
+                );
+                // Initial toss
+                Matter.Body.setVelocity(body, { x: isLeft ? -2 : 2, y: 0 });
+                Matter.Body.setAngularVelocity(body, isLeft ? -0.05 : 0.05);
+                Matter.World.add(world, body);
+                debris.push({ body, w: residueW, color: mov.color });
+
+                // Limit active bodies for performance
+                if (debris.length > 40) {
+                    const oldest = debris.shift();
+                    Matter.World.remove(world, oldest.body);
+                }
+            }
         }
 
         const trimmed = {
@@ -688,7 +779,19 @@
     function scrollUp() {
         const ty = stack[stack.length - 1].y;
         const thresh = H * 0.36;
-        if (ty < thresh) stack.forEach((b) => (b.y += thresh - ty));
+        if (ty < thresh) {
+            const dy = thresh - ty;
+            stack.forEach((b) => (b.y += dy));
+            
+            // Shift physics bodies down as well
+            debris.forEach(d => {
+                Matter.Body.setPosition(d.body, {
+                    x: d.body.position.x,
+                    y: d.body.position.y + dy
+                });
+            });
+            // We keep the floorBody static at the bottom of the viewport
+        }
     }
 
     function endGame() {
@@ -783,7 +886,6 @@
             </div>
           `;
         overlay.style.display = "flex";
-        if (kofiBtn) kofiBtn.style.display = "flex";
         if (isSmallScreen) {
             document.getElementById("coin-counter").style.display = "none";
             document.getElementById("gem-counter").style.display = "none";
@@ -877,7 +979,6 @@
         scoreEl.textContent = score;
 
         overlay.style.display = "none";
-        if (kofiBtn) kofiBtn.style.display = "none";
         document.getElementById("coin-counter").style.display = "flex";
         document.getElementById("gem-counter").style.display = "flex";
         running = true;
@@ -891,6 +992,13 @@
     document.getElementById("sound-btn").addEventListener("click", () => {
         soundEnabled = !soundEnabled;
         updateSoundIcon();
+    });
+    document.getElementById("haptic-btn").addEventListener("click", () => {
+        hapticsEnabled = !hapticsEnabled;
+        gameState.hapticsEnabled = hapticsEnabled;
+        SecureStorage.save(gameState);
+        updateHapticIcon();
+        triggerHaptic(50);
     });
 
     const fullscreenBtn = document.getElementById("fullscreen-btn");
@@ -907,6 +1015,10 @@
     const kofiModal = document.getElementById("kofi-modal");
     const closeKofiBtn = document.getElementById("close-kofi");
 
+    settingsBtn.addEventListener("click", openSettings);
+    closeSettingsBtn.addEventListener("click", closeSettings);
+
+    const kofiBtn = document.getElementById("kofi-btn");
     if (kofiBtn) {
         kofiBtn.addEventListener("click", () => {
             kofiModal.style.display = "flex";
@@ -1113,10 +1225,33 @@
             multiplierValue = 1;
         }
 
+        // Step physics engine
+        Matter.Engine.update(engine, dt * 1000);
+
         ctx.clearRect(0, 0, W, H);
+        
+        // Render stack
         stack.forEach((b) => {
             if (b.y < H + 30) drawBlock(b.x, b.y, b.w, BLOCK_H, b.color);
         });
+
+        // Render and cleanup debris
+        for (let i = debris.length - 1; i >= 0; i--) {
+            const d = debris[i];
+            const pos = d.body.position;
+            const angle = d.body.angle;
+
+            // Cleanup if far off screen
+            if (pos.y > H + 100) {
+                Matter.World.remove(world, d.body);
+                debris.splice(i, 1);
+                continue;
+            }
+
+            // drawBlock takes (x, y) which is top-left. Matter.js uses center.
+            drawBlock(pos.x - d.w / 2, pos.y - BLOCK_H / 2, d.w, BLOCK_H, d.color, angle);
+        }
+
         mov.x += dir * spd;
         if (mov.x > W) dir = -1;
         if (mov.x + mov.w < 0) dir = 1;
