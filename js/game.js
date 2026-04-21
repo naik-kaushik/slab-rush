@@ -359,10 +359,10 @@
 
     async function initAssets() {
         const audioAssets = [
-            { id: "chime", src: "assets/audio/chime_sound.mp3" },
-            { id: "gameOver", src: "assets/audio/game_over.mp3" },
-            { id: "swoosh", src: "assets/audio/swoosh.mp3" },
-            { id: "pb", src: "assets/audio/personal-best.mp3" }
+            { id: "chime", src: "assets/audio/chime_sound.mp3?v=1.8.0" },
+            { id: "gameOver", src: "assets/audio/game_over.mp3?v=1.8.0" },
+            { id: "swoosh", src: "assets/audio/swoosh.mp3?v=1.8.0" },
+            { id: "pb", src: "assets/audio/personal-best.mp3?v=1.8.0" }
         ];
 
         const total = audioAssets.length + 1; // +1 for logo
@@ -419,7 +419,7 @@
             loadAudio(audioAssets[1]),
             loadAudio(audioAssets[2]),
             loadAudio(audioAssets[3]),
-            loadImage("assets/images/game_logo.png")
+            loadImage("assets/images/game_logo.png?v=1.8.0")
         ]);
 
         chime = a1;

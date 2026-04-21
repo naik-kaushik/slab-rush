@@ -1,12 +1,21 @@
-const CACHE_NAME = 'slab-rush-1.7.0';
+const CACHE_NAME = 'slab-rush-1.8.0';
 const ASSETS = [
-    './?v=1.7.0',
-    './index.html?v=1.7.0',
-    './css/style.css?v=1.7.0',
-    './css/carbon.css?v=1.7.0',
-    './js/game.js?v=1.7.0',
-    './assets/favicon/site.webmanifest?v=1.7.0',
-    './assets/favicon/favicon.ico?v=1.7.0'
+    './?v=1.8.0',
+    './index.html?v=1.8.0',
+    './css/style.css?v=1.8.0',
+    './css/carbon.css?v=1.8.0',
+    './js/game.js?v=1.8.0',
+    './js/matter.js?v=1.8.0',
+    './assets/favicon/site.webmanifest?v=1.8.0',
+    './assets/favicon/favicon.ico?v=1.8.0',
+    './assets/favicon/favicon-32x32.png?v=1.8.0',
+    './assets/favicon/favicon-16x16.png?v=1.8.0',
+    './assets/favicon/apple-touch-icon.png?v=1.8.0',
+    './assets/images/game_logo.png?v=1.8.0',
+    './assets/audio/chime_sound.mp3?v=1.8.0',
+    './assets/audio/game_over.mp3?v=1.8.0',
+    './assets/audio/swoosh.mp3?v=1.8.0',
+    './assets/audio/personal-best.mp3?v=1.8.0'
 ];
 
 self.addEventListener('install', (event) => {
