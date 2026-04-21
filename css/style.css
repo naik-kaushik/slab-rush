@@ -93,36 +93,10 @@
     }
 
     /* Keep Ko-fi toggle on top, but don't block the screen */
-    #kofi-btn {
-      position: absolute;
-      top: 74px;
-      right: 20px;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 90;
-      transition: all 0.3s ease;
-      padding: 10px;
-    }
-
-    #kofi-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-      transform: scale(1.1);
-      box-shadow: 0 0 15px rgba(114, 164, 242, 0.4);
-      color: #72a4f2;
-    }
-
+    /* Ko-fi toggle inside settings modal */
     #kofi-btn svg {
-      width: 100%;
-      height: 100%;
+      width: 18px;
+      height: 18px;
     }
 
     #gw {
@@ -537,7 +511,7 @@
       border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
-    #sound-btn {
+    #settings-btn {
       position: absolute;
       top: 20px;
       right: 20px;
@@ -557,12 +531,100 @@
       transition: background 0.2s, transform 0.1s;
     }
 
-    #sound-btn:hover {
+    #settings-btn:hover {
       background: rgba(255, 255, 255, 0.15);
+      transform: rotate(45deg) scale(1.1);
     }
 
-    #sound-btn:active {
+    #settings-btn:active {
       transform: scale(0.95);
+    }
+
+    #settings-btn svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+    }
+
+    #settings-card {
+      padding: 32px;
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .stats-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .stat-value-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stat-value-row .coin-icon,
+    .stat-value-row .gem-icon,
+    .stat-value-row .pb-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .stat-value-row span {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .settings-controls {
+      display: flex;
+      gap: 12px;
+    }
+
+    .settings-control-btn {
+      flex: 1;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .settings-control-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .settings-control-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
     }
 
     #sound-btn svg {
@@ -571,43 +633,7 @@
       stroke: currentColor;
     }
 
-    #fullscreen-btn {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
-      color: #fff;
-      cursor: pointer;
-      z-index: 100;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    #fullscreen-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
-
-    #fullscreen-btn:active {
-      transform: scale(0.95);
-    }
-
-    #fullscreen-btn::before {
-      content: "";
-      display: none;
-    }
-
     #fullscreen-btn svg {
-      width: 20px;
-      height: 20px;
-      stroke: currentColor;
       fill: none;
       stroke-width: 2;
     }
@@ -850,20 +876,29 @@
     }
 
     #close-shop,
-    #close-kofi {
-      background: none;
-      border: none;
+    #close-kofi,
+    #close-settings {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: rgba(255, 255, 255, 0.6);
-      font-size: 32px;
+      font-size: 20px;
       cursor: pointer;
-      line-height: 1;
-      padding: 0;
-      transition: color 0.2s;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      transition: all 0.2s;
     }
 
     #close-shop:hover,
-    #close-kofi:hover {
+    #close-kofi:hover,
+    #close-settings:hover {
+      background: rgba(255, 255, 255, 0.15);
       color: #fff;
+      transform: scale(1.1);
+      border-color: rgba(255, 255, 255, 0.3);
     }
 
     .shop-tabs {
