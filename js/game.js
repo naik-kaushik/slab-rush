@@ -131,6 +131,10 @@
     // However, the user said "if user plays the game more than 5 times".
     // Let's increment it here for "visits" or in startGame for "plays"?
     // The prompt says "if user plays the game more than 5 times". So I'll do it in startGame.
+    // - [x] Update `scrollUp()` to shift debris but keep floor static
+    // - [x] Implement debris collection limit (max 40)
+    // - [x] Update `loop()` debris rendering to handle piled bodies
+    // - [/] Verify floor collection and scrolling in the browser
     SecureStorage.save(gameState);
 
     let deferredPrompt;
@@ -184,7 +188,12 @@
         multiplierValue = 1,
         consecutivePerfects = 0,
         hasCelebratedPB = false,
-        lastLoopTime = 0;
+        lastLoopTime = 0,
+        // Matter.js Integration
+        engine = Matter.Engine.create(),
+        world = engine.world,
+        debris = [],
+        floorBody = null;
 
     const SKINS = [
         { id: 'classic', name: 'Classic Teal', colors: ["#5ecfbe", "#4bbdac", "#3aab9a", "#2b9888", "#1d8576", "#117165", "#085e54"], price: 0 },
@@ -464,6 +473,14 @@
         H = gw.clientHeight;
         cv.width = W;
         cv.height = H;
+
+        // Update floor position
+        if (floorBody) {
+            Matter.Body.setPosition(floorBody, { x: W / 2, y: H + 25 });
+        } else {
+            floorBody = Matter.Bodies.rectangle(W / 2, H + 25, W * 2, 50, { isStatic: true });
+            Matter.World.add(world, floorBody);
+        }
     }
 
     function col(i) {
@@ -496,7 +513,14 @@
         return `rgba(${r},${g},${b},${alpha})`;
     }
 
-    function drawBlock(x, y, w, h, color) {
+    function drawBlock(x, y, w, h, color, angle = 0) {
+        ctx.save();
+        if (angle !== 0) {
+            ctx.translate(x + w / 2, y + h / 2);
+            ctx.rotate(angle);
+            ctx.translate(-(x + w / 2), -(y + h / 2));
+        }
+
         // Front face
         ctx.beginPath();
         ctx.moveTo(x, y);
@@ -506,6 +530,7 @@
         ctx.closePath();
         ctx.fillStyle = color;
         ctx.fill();
+
         // Right face
         ctx.beginPath();
         ctx.moveTo(x + w, y);
@@ -515,6 +540,7 @@
         ctx.closePath();
         ctx.fillStyle = shade(color, -28);
         ctx.fill();
+
         // Top face
         ctx.beginPath();
         ctx.moveTo(x, y);
@@ -524,6 +550,8 @@
         ctx.closePath();
         ctx.fillStyle = shade(color, 28);
         ctx.fill();
+
+        ctx.restore();
     }
 
     function playChime() {
@@ -572,6 +600,13 @@
             multiplierValue = 2;
             SecureStorage.save(gameState);
         }
+
+        // Clear physics
+        Matter.World.clear(world);
+        Matter.Engine.clear(engine);
+        debris = [];
+        floorBody = null; // Forces recreation in resize()
+        resize();
 
         lastLoopTime = performance.now();
         hasUsedRevive = false;
@@ -637,6 +672,31 @@
             multiplierBadge.classList.add("multiplier-bump");
         } else {
             consecutivePerfects = 0;
+            // Create residue debris
+            const isLeft = mov.x < t.x;
+            const residueW = isLeft ? t.x - mov.x : (mov.x + mov.w) - (t.x + t.w);
+            const residueX = isLeft ? mov.x : t.x + t.w;
+
+            if (residueW > 0) {
+                const body = Matter.Bodies.rectangle(
+                    residueX + residueW / 2,
+                    mov.y + BLOCK_H / 2,
+                    residueW,
+                    BLOCK_H,
+                    { friction: 0.3, restitution: 0.2 }
+                );
+                // Initial toss
+                Matter.Body.setVelocity(body, { x: isLeft ? -2 : 2, y: 0 });
+                Matter.Body.setAngularVelocity(body, isLeft ? -0.05 : 0.05);
+                Matter.World.add(world, body);
+                debris.push({ body, w: residueW, color: mov.color });
+
+                // Limit active bodies for performance
+                if (debris.length > 40) {
+                    const oldest = debris.shift();
+                    Matter.World.remove(world, oldest.body);
+                }
+            }
         }
 
         const trimmed = {
@@ -701,7 +761,19 @@
     function scrollUp() {
         const ty = stack[stack.length - 1].y;
         const thresh = H * 0.36;
-        if (ty < thresh) stack.forEach((b) => (b.y += thresh - ty));
+        if (ty < thresh) {
+            const dy = thresh - ty;
+            stack.forEach((b) => (b.y += dy));
+            
+            // Shift physics bodies down as well
+            debris.forEach(d => {
+                Matter.Body.setPosition(d.body, {
+                    x: d.body.position.x,
+                    y: d.body.position.y + dy
+                });
+            });
+            // We keep the floorBody static at the bottom of the viewport
+        }
     }
 
     function endGame() {
@@ -1128,10 +1200,33 @@
             multiplierValue = 1;
         }
 
+        // Step physics engine
+        Matter.Engine.update(engine, dt * 1000);
+
         ctx.clearRect(0, 0, W, H);
+        
+        // Render stack
         stack.forEach((b) => {
             if (b.y < H + 30) drawBlock(b.x, b.y, b.w, BLOCK_H, b.color);
         });
+
+        // Render and cleanup debris
+        for (let i = debris.length - 1; i >= 0; i--) {
+            const d = debris[i];
+            const pos = d.body.position;
+            const angle = d.body.angle;
+
+            // Cleanup if far off screen
+            if (pos.y > H + 100) {
+                Matter.World.remove(world, d.body);
+                debris.splice(i, 1);
+                continue;
+            }
+
+            // drawBlock takes (x, y) which is top-left. Matter.js uses center.
+            drawBlock(pos.x - d.w / 2, pos.y - BLOCK_H / 2, d.w, BLOCK_H, d.color, angle);
+        }
+
         mov.x += dir * spd;
         if (mov.x > W) dir = -1;
         if (mov.x + mov.w < 0) dir = 1;
